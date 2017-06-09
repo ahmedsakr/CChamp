@@ -10,5 +10,5 @@ struct league_account {
     Details *details;
 };
 
-typedef struct league_account Account;
-Account* account_create(char *summoner_name, char *region);
+typedef struct league_account Summoner;
+Summoner* create_summoner(char *summoner_name, char *region);

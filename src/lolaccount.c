@@ -2,9 +2,9 @@
 #include <assert.h>
 #include "lolaccount.h"
 
-Account* account_create(char *summoner_name, char *region)
+Summoner* create_summoner(char *summoner_name, char *region)
 {
-    Account *account = malloc(sizeof(Account));
+    Summoner *account = malloc(sizeof(Summoner));
     assert(account != NULL);
 
     account->summoner_name = summoner_name;
