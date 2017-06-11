@@ -1,5 +1,5 @@
 #include <stdio.h>
-#include "lolaccount.h"
+#include "summoner.h"
 
 int main(void)
 {
