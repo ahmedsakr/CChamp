@@ -28,5 +28,7 @@ struct league_account {
 };
 
 typedef struct league_account Summoner;
-Summoner* create_summoner(char *summoner_name, char *region);
+Summoner* summoner_create(char *summoner_name, char *region);
+
+#define SUMMONER_NAME_MAX_LENGTH 16
 #endif

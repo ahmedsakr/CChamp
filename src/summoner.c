@@ -15,9 +15,9 @@
  */
 #include <stdlib.h>
 #include <assert.h>
-#include "summoner.h"
+#include "cchamp/summoner.h"
 
-Summoner* create_summoner(char *summoner_name, char *region)
+Summoner* summoner_create(char *summoner_name, char *region)
 {
     Summoner *account = malloc(sizeof(Summoner));
     assert(account != NULL);

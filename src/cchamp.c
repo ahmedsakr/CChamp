@@ -13,19 +13,17 @@
  * You should have received a copy of the GNU General Public License
  * along with CChamp.  If not, see <http://www.gnu.org/licenses/>.
  */
-#ifndef RIOTAPI_H
-#define RIOTAPT_H
-struct api_node {
-    char *api_key;
-    int max_requests;
-};
+#include "cchamp/cchamp.h"
+#include <string.h>
 
-struct api_request {
-    struct api_node api;
-    char *region;
-    char *qualified_request;
+static Request request;
+
+Summoner* get_player_by_summoner_id(char* summoner_id)
+{
+    memset(&request, 0x00, sizeof(Request));
+
+    request.region = "na1";
+    memcpy(&request.parameter, summoner_id, strlen(summoner_id));
+
+    send_request(&request);
 }
-
-typedef struct api_node RiotAPI;
-typedef struct api_request Request;
-#endif
