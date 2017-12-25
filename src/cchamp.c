@@ -18,12 +18,14 @@
 
 static Request request;
 
-Summoner* get_player_by_summoner_id(char* summoner_id)
+Summoner* get_player_by_summoner_id(uint16_t region, char* summoner_id)
 {
-    memset(&request, 0x00, sizeof(Request));
-
-    request.region = "na1";
+    // flush and update the parameter
+    memset(&request.parameter, 0x00, sizeof(request.parameter));
     memcpy(&request.parameter, summoner_id, strlen(summoner_id));
+
+    request.region = region;
+    request.api = API_SUMMONER;
 
     send_request(&request);
 }

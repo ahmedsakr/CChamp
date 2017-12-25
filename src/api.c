@@ -24,8 +24,10 @@ RiotAPI api = {
 };
 
 static char *build_query(Request* request);
+static char get_region_index(uint16_t region);
 static CURL *channel;
-char query[1024];
+static char query[1024];
+static char *regions[] = {"na1", "eun1", "euw1", "ru", "tr1", "kr", "br1", "oc1", "jp1", "la1", "la2"};
 
 int cchamp_init()
 {
@@ -62,11 +64,21 @@ static char* build_query(Request* request)
     memset(query, 0x00, 1024);
 
     strcpy(query, "https://");
-    strcat(query, request->region);
+    strcat(query, regions[get_region_index(request->region)]);
     strcat(query, ".api.riotgames.com/lol/summoner/v3/summoners/");
     strcat(query, request->parameter);
     strcat(query, "?api_key=");
     strcat(query, api.key);
 
     return query;
+}
+
+static char get_region_index(uint16_t region)
+{
+    char index = 0;
+    while ((region >>= 1) != 0) {
+        index++;
+    }
+
+    return index;
 }
