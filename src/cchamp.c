@@ -18,14 +18,13 @@
 
 static Request request;
 
-Summoner* get_player_by_summoner_id(uint16_t region, char* summoner_id)
+static char *summoner_request(uint16_t region, char *keyword, char *qualifier)
 {
-    // flush and update the parameter
-    memset(&request.parameter, 0x00, sizeof(request.parameter));
-    memcpy(&request.parameter, summoner_id, strlen(summoner_id));
-
-    request.region = region;
     request.api = API_SUMMONER;
+    request.keyword = keyword;
+    request.url_qualifier = qualifier;
+    request.region = region;
+    cchamp_send_request(&request);
 
-    send_request(&request);
+    return request.response;
 }

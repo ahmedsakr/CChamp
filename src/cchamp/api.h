@@ -32,18 +32,20 @@ struct api_node {
 struct api_request {
     uint16_t api;
     uint16_t region;
-    char parameter[512];
+    char *url_qualifier;
+    char *keyword;
+    char response[8192];
 };
 
 typedef struct api_node RiotAPI;
 typedef struct api_request Request;
 extern RiotAPI api;
 
-int cchamp_init();
-void set_api_key(char *key);
-void set_api_region(char *region);
-void set_api_max_requests(uint16_t per_second, uint16_t per_two_minutes);
-char* send_request(Request* request);
+int     cchamp_init();
+void    cchamp_close();
+void    cchamp_set_api_key(char *key);
+void    cchamp_set_max_requests(uint16_t per_second, uint16_t per_two_minutes);
+void    cchamp_send_request(Request* request);
 
 // All server regions supported by the official API
 #define REGION_NA               0x0001

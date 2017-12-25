@@ -15,7 +15,7 @@
  */
 #include <stdlib.h>
 #include <assert.h>
-#include "cchamp/summoner.h"
+#include "cchamp.c"
 
 Summoner* summoner_create(char *summoner_name, char *region)
 {
@@ -26,4 +26,22 @@ Summoner* summoner_create(char *summoner_name, char *region)
     account->region = region;
 
     return account;
+}
+
+Summoner* get_summoner_by_sid(uint16_t region, char* summoner_id)
+{
+    char *response = summoner_request(region, summoner_id, "");
+    return NULL;
+}
+
+Summoner* get_summoner_by_aid(uint16_t region, char* account_id)
+{
+    char *response = summoner_request(region, account_id, "by-account");
+    return NULL;
+}
+
+Summoner* get_summoner_by_name(uint16_t region, char* summoner_name)
+{
+    char *response = summoner_request(region, summoner_name, "by-name");
+    return NULL;
 }

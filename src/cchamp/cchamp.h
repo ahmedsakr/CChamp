@@ -21,7 +21,7 @@
 #include "api.h"
 
 // Summoner API method definitions
-Summoner* get_player_by_summoner_id(uint16_t region, char* summoner_id);
-Summoner* get_player_by_account_id(char* accountId);
-Summoner* get_player_by_name(char* summoner_name);
+Summoner* get_summoner_by_sid(uint16_t region, char* summoner_id);
+Summoner* get_summoner_by_aid(uint16_t region, char* account_id);
+Summoner* get_summoner_by_name(uint16_t region, char* summoner_name);
 #endif
