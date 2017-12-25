@@ -18,6 +18,14 @@
 
 static Request request;
 
+
+/**
+ * Dispatches a summoner information retrieval request.
+ *
+ * @param region    The region which the targeted summoner lies in.
+ * @param keyword   The query keyword (i.e. summoner id, account id, or summoner name).
+ * @param qualifier Specifies to the api which keyword is being supplied.
+ */
 static char *summoner_request(uint16_t region, char *keyword, char *qualifier)
 {
     request.api = API_SUMMONER;

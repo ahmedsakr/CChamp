@@ -16,18 +16,18 @@
 #ifndef API_H
 #define API_H
 
-#include "cchamp/summoner.h"
-
-#define MAX_REQUESTS_PER_SECOND 20
-#define MAX_REQUESTS_PER_TWO_MINUTES 120
+#define API_KEY_LENGTH 42
 
 struct api_node {
-    char key[64];
+    char key[API_KEY_LENGTH + 1];
     struct rate_limit {
         uint16_t per_second;
         uint16_t per_two_minutes;
     } rate;
 };
+
+#define MAX_REQUESTS_PER_SECOND 20
+#define MAX_REQUESTS_PER_TWO_MINUTES 120
 
 struct api_request {
     uint16_t api;

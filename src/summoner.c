@@ -17,6 +17,13 @@
 #include <assert.h>
 #include "cchamp.c"
 
+
+/**
+ * Allocates and initializes a summoner object.
+ *
+ * @param summoner_name The name of the player.
+ * @param region        The region which the player's account is in.
+ */
 Summoner* summoner_create(char *summoner_name, char *region)
 {
     Summoner *account = malloc(sizeof(Summoner));
@@ -28,18 +35,38 @@ Summoner* summoner_create(char *summoner_name, char *region)
     return account;
 }
 
+
+/**
+ * Dispatches a summoner information retrieval request using the summoner id as the keyword.
+ *
+ * @param region        The region which the player's account is being searched for.
+ * @param summoner_id   The summoner id of the player's account.
+ */
 Summoner* get_summoner_by_sid(uint16_t region, char* summoner_id)
 {
     char *response = summoner_request(region, summoner_id, "");
     return NULL;
 }
 
+
+/**
+ * Dispatches a summoner information retrieval request using the account id as the keyword.
+ *
+ * @param region        The region which the player's account is being searched for.
+ * @param account_id    The account id of the player's account.
+ */
 Summoner* get_summoner_by_aid(uint16_t region, char* account_id)
 {
     char *response = summoner_request(region, account_id, "by-account");
     return NULL;
 }
 
+/**
+ * Dispatches a summoner information retrieval request using the summoner name as the keyword.
+ *
+ * @param region        The region which the player's account is being searched for.
+ * @param summoner_name The name of the player's account.
+ */
 Summoner* get_summoner_by_name(uint16_t region, char* summoner_name)
 {
     char *response = summoner_request(region, summoner_name, "by-name");
