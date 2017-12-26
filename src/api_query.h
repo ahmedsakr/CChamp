@@ -13,25 +13,18 @@
  * You should have received a copy of the GNU General Public License
  * along with CChamp.  If not, see <http://www.gnu.org/licenses/>.
  */
-#ifndef SUMMONER_H
-#define SUMMONER_H
+#ifndef API_QUERY_H
+#define API_QUERY_H
 #include "api.h"
-struct account_details {
-    int level;
-    int profile_icon_id;
+
+size_t query_response_write(char *ptr, size_t size, size_t nmemb, void *request);
+char get_region_index(uint16_t region);
+char* build_query(Request* request);
+
+struct query_param {
+    char key[64];
+    char value[64];
 };
-typedef struct account_details Details;
 
-#define SUMMONER_NAME_MAX_LENGTH    16
-
-struct league_account {
-    char name[SUMMONER_NAME_MAX_LENGTH];
-    char region[REGION_MAX_LENGTH];
-    uint64_t summoner_id;
-    uint64_t account_id;
-    Details details;
-};
-typedef struct league_account Summoner;
-
-Summoner* summoner_create(char *summoner_name, char *region, uint64_t account_id, uint64_t summoner_id);
+typedef struct query_param query_param;
 #endif

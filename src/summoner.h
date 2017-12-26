@@ -13,27 +13,9 @@
  * You should have received a copy of the GNU General Public License
  * along with CChamp.  If not, see <http://www.gnu.org/licenses/>.
  */
-#include <string.h>
+#ifndef SUMMONER_H
+#define SUMMONER_H
 #include <cchamp/cchamp.h>
-#include "api.h"
 
-static Request request;
-
-
-/**
- * Dispatches a summoner information retrieval request.
- *
- * @param region    The region which the targeted summoner lies in.
- * @param keyword   The query keyword (i.e. summoner id, account id, or summoner name).
- * @param qualifier Specifies to the api which keyword is being supplied.
- */
-static char *summoner_request(uint16_t region, char *keyword, char *qualifier)
-{
-    request.api = API_SUMMONER;
-    request.keyword = keyword;
-    request.url_qualifier = qualifier;
-    request.region = region;
-    cchamp_send_request(&request);
-
-    return request.response;
-}
+Summoner* summoner_create(char *summoner_name, char *region, uint64_t account_id, uint64_t summoner_id);
+#endif

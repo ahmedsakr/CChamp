@@ -41,26 +41,7 @@ typedef struct api_node RiotAPI;
 typedef struct api_request Request;
 extern RiotAPI api;
 
-int     cchamp_init();
-void    cchamp_close();
-void    cchamp_set_api_key(char *key);
-void    cchamp_set_max_requests(uint16_t per_second, uint16_t per_two_minutes);
 void    cchamp_send_request(Request* request);
-
-#define REGION_MAX_LENGTH       4
-
-// All server regions supported by the official API
-#define REGION_NA               0x0001
-#define REGION_EUNE             0x0002
-#define REGION_EUW              0x0004
-#define REGION_RU               0x0008
-#define REGION_TR               0x0010
-#define REGION_KR               0x0020
-#define REGION_BR               0x0040
-#define REGION_OC               0x0080
-#define REGION_JP               0x0100
-#define REGION_LA1              0x0200
-#define REGION_LA2              0x0400
 
 // All different types of APIs available for requests
 #define API_CHAMPION_MASTERY    0x0001

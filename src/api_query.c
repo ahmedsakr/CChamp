@@ -17,7 +17,8 @@
 #include <string.h>
 #include <stdlib.h>
 #include <cchamp/cchamp.h>
-#include <cchamp_utils.h>
+#include "api_query.h"
+#include "cchamp_utils.h"
 
 char *regions[] = {"na1", "eun1", "euw1", "ru", "tr1", "kr", "br1", "oc1", "jp1", "la1", "la2"};
 static char query[1024];
@@ -36,9 +37,9 @@ extern char *get_web_safe_str(char *str);
  *
  * @return the total number of bytes received.
  */
-size_t query_response_write(char *ptr, size_t size, size_t nmemb, void *userdata)
+size_t query_response_write(char *ptr, size_t size, size_t nmemb, void *request)
 {
-    memcpy(((Request *)userdata)->response, ptr, size * nmemb);
+    memcpy(((Request *)request)->response, ptr, size * nmemb);
     return size * nmemb;
 }
 

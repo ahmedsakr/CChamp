@@ -27,7 +27,7 @@ extern char get_region_index(uint16_t region);
  * @param summoner_name The name of the player.
  * @param region        The region which the player's account is in.
  */
-Summoner* summoner_create(char *summoner_name, char *region, uint64_t account_id, uint64_t summoner_id)
+Summoner* summoner_create(char *summoner_name, char *region, uint32_t account_id, uint32_t summoner_id)
 {
     Summoner *summoner= calloc(1, sizeof(Summoner));
     summoner->account_id = account_id;
@@ -80,15 +80,15 @@ static Summoner *parse_summoner(uint16_t region, char *json)
 {
     cJSON *data = cJSON_Parse(json);
     char *name = cJSON_GetObjectItemCaseSensitive(data, "name")->valuestring;
-    uint64_t summoner_id = cJSON_GetObjectItemCaseSensitive(data, "id")->valueint;
-    uint64_t account_id = cJSON_GetObjectItemCaseSensitive(data, "accountId")->valueint;
+    uint32_t summoner_id = cJSON_GetObjectItemCaseSensitive(data, "id")->valueint;
+    uint32_t account_id = cJSON_GetObjectItemCaseSensitive(data, "accountId")->valueint;
     int level = cJSON_GetObjectItemCaseSensitive(data, "summonerLevel")->valueint;
     int icon_id = cJSON_GetObjectItemCaseSensitive(data, "profileIconId")->valueint;
     char *region_str = regions[get_region_index(region)];
 
     Summoner *summoner = summoner_create(name, region_str, account_id, summoner_id);
-    summoner->details.level = level;
-    summoner->details.profile_icon_id = icon_id;
+    summoner->level = level;
+    summoner->profile_icon_id = icon_id;
 
     cJSON_Delete(data);
     return summoner;
