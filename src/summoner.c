@@ -14,9 +14,12 @@
  * along with CChamp.  If not, see <http://www.gnu.org/licenses/>.
  */
 #include <stdlib.h>
-#include <assert.h>
 #include "cchamp.c"
+#include <cJSON.h>
 
+static Summoner *parse_summoner(uint16_t region, char *json);
+extern char *regions[];
+extern char get_region_index(uint16_t region);
 
 /**
  * Allocates and initializes a summoner object.
@@ -24,15 +27,14 @@
  * @param summoner_name The name of the player.
  * @param region        The region which the player's account is in.
  */
-Summoner* summoner_create(char *summoner_name, char *region)
+Summoner* summoner_create(char *summoner_name, char *region, uint64_t account_id, uint64_t summoner_id)
 {
-    Summoner *account = malloc(sizeof(Summoner));
-    assert(account != NULL);
-
-    account->summoner_name = summoner_name;
-    account->region = region;
-
-    return account;
+    Summoner *summoner= calloc(1, sizeof(Summoner));
+    summoner->account_id = account_id;
+    summoner->summoner_id = summoner_id;
+    memcpy(summoner->name, summoner_name, strlen(summoner_name));
+    memcpy(summoner->region, region, strlen(region));
+    return summoner;
 }
 
 
@@ -45,7 +47,7 @@ Summoner* summoner_create(char *summoner_name, char *region)
 Summoner* get_summoner_by_sid(uint16_t region, char* summoner_id)
 {
     char *response = summoner_request(region, summoner_id, "");
-    return NULL;
+    return parse_summoner(region, response);
 }
 
 
@@ -58,7 +60,7 @@ Summoner* get_summoner_by_sid(uint16_t region, char* summoner_id)
 Summoner* get_summoner_by_aid(uint16_t region, char* account_id)
 {
     char *response = summoner_request(region, account_id, "by-account");
-    return NULL;
+    return parse_summoner(region, response);
 }
 
 /**
@@ -70,5 +72,24 @@ Summoner* get_summoner_by_aid(uint16_t region, char* account_id)
 Summoner* get_summoner_by_name(uint16_t region, char* summoner_name)
 {
     char *response = summoner_request(region, summoner_name, "by-name");
-    return NULL;
+    return parse_summoner(region, response);
+}
+
+
+static Summoner *parse_summoner(uint16_t region, char *json)
+{
+    cJSON *data = cJSON_Parse(json);
+    char *name = cJSON_GetObjectItemCaseSensitive(data, "name")->valuestring;
+    uint64_t summoner_id = cJSON_GetObjectItemCaseSensitive(data, "id")->valueint;
+    uint64_t account_id = cJSON_GetObjectItemCaseSensitive(data, "accountId")->valueint;
+    int level = cJSON_GetObjectItemCaseSensitive(data, "summonerLevel")->valueint;
+    int icon_id = cJSON_GetObjectItemCaseSensitive(data, "profileIconId")->valueint;
+    char *region_str = regions[get_region_index(region)];
+
+    Summoner *summoner = summoner_create(name, region_str, account_id, summoner_id);
+    summoner->details.level = level;
+    summoner->details.profile_icon_id = icon_id;
+
+    cJSON_Delete(data);
+    return summoner;
 }

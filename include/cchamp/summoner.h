@@ -15,20 +15,23 @@
  */
 #ifndef SUMMONER_H
 #define SUMMONER_H
+#include "api.h"
 struct account_details {
     int level;
-    int summoner_icon_id;
+    int profile_icon_id;
 };
-
 typedef struct account_details Details;
+
+#define SUMMONER_NAME_MAX_LENGTH    16
+
 struct league_account {
-    char *summoner_name;
-    char *region;
-    Details *details;
+    char name[SUMMONER_NAME_MAX_LENGTH];
+    char region[REGION_MAX_LENGTH];
+    uint64_t summoner_id;
+    uint64_t account_id;
+    Details details;
 };
-
 typedef struct league_account Summoner;
-Summoner* summoner_create(char *summoner_name, char *region);
 
-#define SUMMONER_NAME_MAX_LENGTH 16
+Summoner* summoner_create(char *summoner_name, char *region, uint64_t account_id, uint64_t summoner_id);
 #endif

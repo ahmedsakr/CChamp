@@ -47,6 +47,8 @@ void    cchamp_set_api_key(char *key);
 void    cchamp_set_max_requests(uint16_t per_second, uint16_t per_two_minutes);
 void    cchamp_send_request(Request* request);
 
+#define REGION_MAX_LENGTH       4
+
 // All server regions supported by the official API
 #define REGION_NA               0x0001
 #define REGION_EUNE             0x0002
@@ -72,15 +74,15 @@ void    cchamp_send_request(Request* request);
 #define API_THIRD_PARTY_CODE    0x0100
 
 // the current version of all APIs
-#define CHAMPION_MASTERY_API_VERSION  3
-#define CHAMPION_API_VERSION 3
-#define LEAGUE_API_VERSION 3
-#define LOL_STATIC_DATA_API_VERSION 3
-#define LOL_STATUS_API_VERSION 3
-#define MATCH_API_VERSION 3
-#define SPECTATOR_API_VERSION 3
-#define SUMMONER_API_VERSION 3
-#define THIRD_PARTY_CODE_API_VERSION 3
+#define CHAMPION_MASTERY_API_VERSION    3
+#define CHAMPION_API_VERSION            3
+#define LEAGUE_API_VERSION              3
+#define LOL_STATIC_DATA_API_VERSION     3
+#define LOL_STATUS_API_VERSION          3
+#define MATCH_API_VERSION               3
+#define SPECTATOR_API_VERSION           3
+#define SUMMONER_API_VERSION            3
+#define THIRD_PARTY_CODE_API_VERSION    3
 
 #define API_VERSION(X) X ## _API_VERSION
 

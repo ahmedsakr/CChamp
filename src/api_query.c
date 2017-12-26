@@ -17,7 +17,7 @@
 #include <string.h>
 #include <cchamp/cchamp.h>
 
-static char *regions[] = {"na1", "eun1", "euw1", "ru", "tr1", "kr", "br1", "oc1", "jp1", "la1", "la2"};
+char *regions[] = {"na1", "eun1", "euw1", "ru", "tr1", "kr", "br1", "oc1", "jp1", "la1", "la2"};
 static char query[1024];
 
 
@@ -48,7 +48,7 @@ size_t query_response_write(char *ptr, size_t size, size_t nmemb, void *userdata
  *
  * @return The identifying index of the region.
  */
-static char get_region_index(uint16_t region)
+char get_region_index(uint16_t region)
 {
     char index = 0;
     while ((region >>= 1) != 0) {
