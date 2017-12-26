@@ -15,10 +15,13 @@
  */
 
 #include <string.h>
+#include <stdlib.h>
 #include <cchamp/cchamp.h>
+#include <cchamp_utils.h>
 
 char *regions[] = {"na1", "eun1", "euw1", "ru", "tr1", "kr", "br1", "oc1", "jp1", "la1", "la2"};
 static char query[1024];
+extern char *get_web_safe_str(char *str);
 
 
 /**
@@ -79,7 +82,10 @@ char* build_query(Request* request)
         strcat(query, "/");
     }
 
-    strcat(query, request->keyword);
+    char *web_safe = get_web_safe_str(request->keyword);
+    strcat(query, web_safe);
+    free(web_safe);
+
     strcat(query, "?api_key=");
     strcat(query, api.key);
 

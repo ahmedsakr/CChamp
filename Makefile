@@ -7,7 +7,7 @@ DYNAMIC_INSTALL_DIR= /usr/local/lib
 SOFT_LINK_DIR=		 /usr/lib/x86_64-linux-gnu
 
 compile-proper:
-	gcc -Iinclude -Llib -fpic -c `find src -name "*.c"` -lcurl
+	gcc -Isrc -Iinclude -Llib -fpic -c `find src -name "*.c"` -lcurl
 
 dynamic: compile-proper
 	gcc -shared -fpic -Wl,-soname,${LIB_NAME} -o ${LIB_NAME} *.o -lc
