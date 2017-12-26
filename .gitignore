@@ -16,6 +16,10 @@ local.properties
 .settings/
 .loadpath
 lib/
+include/curl/
+include/cJSON.h
+src/cJSON.c
+
 
 # External tool builders
 .externalToolBuilders/
