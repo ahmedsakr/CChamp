@@ -54,17 +54,6 @@ void    cchamp_send_request(Request* request);
 #define API_SUMMONER            0x0080
 #define API_THIRD_PARTY_CODE    0x0100
 
-// the current version of all APIs
-#define CHAMPION_MASTERY_API_VERSION    3
-#define CHAMPION_API_VERSION            3
-#define LEAGUE_API_VERSION              3
-#define LOL_STATIC_DATA_API_VERSION     3
-#define LOL_STATUS_API_VERSION          3
-#define MATCH_API_VERSION               3
-#define SPECTATOR_API_VERSION           3
-#define SUMMONER_API_VERSION            3
-#define THIRD_PARTY_CODE_API_VERSION    3
-
 #define API_VERSION(X) X ## _API_VERSION
 
 #endif

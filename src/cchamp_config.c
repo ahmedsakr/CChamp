@@ -13,19 +13,34 @@
  * You should have received a copy of the GNU General Public License
  * along with CChamp.  If not, see <http://www.gnu.org/licenses/>.
  */
-#ifndef CCHAMP_QUERY_H
-#define CCHAMP_QUERY_H
-#include "cchamp_api.h"
+#include "cchamp_config.h"
 
-struct query_param {
-    char key[64];
-    char value[64];
-};
+uint16_t settings;
 
-typedef struct query_param QueryParam;
 
-size_t query_response_write(char *ptr, size_t size, size_t nmemb, void *request);
-char get_region_index(uint16_t region);
-char* build_query(Request* request);
+/**
+ * Overrides the current specified setting.
+ *
+ * @param config    The selected setting to be modified.
+ * @param value     The new value of the setting (must be 0 or 1).
+ */
+void cchamp_config_set(uint16_t config, char value)
+{
+    // value must either be 0 or 1
+    if (value & 0xFE != 0) return;
 
-#endif
+    settings |= config;
+}
+
+
+/**
+ * Acquires the installed value for the requested setting.
+ *
+ * @param config The requested setting.
+ *
+ * @return The value of the setting.
+ */
+char cchamp_config_get(uint16_t config)
+{
+    return (settings & config) != 0 ? 1 : 0;
+}

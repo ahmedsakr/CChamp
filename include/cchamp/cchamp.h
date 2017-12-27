@@ -38,6 +38,21 @@ void    cchamp_set_api_key(char *key);
 void    cchamp_set_max_requests(uint16_t per_second, uint16_t per_two_minutes);
 
 
+/*
+ * The versions of all supported APIs.
+ *
+ * You *must* update these once the version changes.
+ */
+#define CHAMPION_MASTERY_API_VERSION    3
+#define CHAMPION_API_VERSION            3
+#define LEAGUE_API_VERSION              3
+#define LOL_STATIC_DATA_API_VERSION     3
+#define LOL_STATUS_API_VERSION          3
+#define MATCH_API_VERSION               3
+#define SPECTATOR_API_VERSION           3
+#define SUMMONER_API_VERSION            3
+#define THIRD_PARTY_CODE_API_VERSION    3
+
 // The maximum length the name of a summoner could be.
 #define SUMMONER_NAME_MAX_LENGTH 16
 
@@ -63,6 +78,19 @@ void    cchamp_set_max_requests(uint16_t per_second, uint16_t per_two_minutes);
 
 
 /*
+ * Lists all possible configuration alterations so thta you may customize cchamp behaviour to better
+ * suit your needs.
+ */
+#define CCHAMP_STATIC_MULTITHREADING 0x0001
+
+
+/*
+ * Update a cchamp configuration.
+ */
+void cchamp_config_set(uint16_t config, char value);
+
+
+/*
  * Summoner struct defining all the relevant information on a player.
  * All of the fields are populated through usage of the Summoner API.
  */
@@ -83,7 +111,8 @@ typedef struct player Summoner;
 
 
 /*
- * API - Summoner (/lol/summoner/)
+ * API - Summoner (/lol/summoner)
+ * Rate Limit Applicable: YES
  * ---
  *
  * The following methods allow you to acquire information on any particular player by providing
@@ -94,4 +123,38 @@ typedef struct player Summoner;
 Summoner* get_summoner_by_sid(uint16_t region, char* summoner_id);
 Summoner* get_summoner_by_aid(uint16_t region, char* account_id);
 Summoner* get_summoner_by_name(uint16_t region, char* summoner_name);
+
+
+/*
+ * Defines all kinds of data retrievable by the static-data API.
+ */
+#define STATIC_RUNES            0x0001
+#define STATIC_MASTERIES        0x0002
+#define STATIC_CHAMPIONS        0x0004
+#define STATIC_ITEMS            0x0008
+#define STATIC_MAPS             0x0010
+#define STATIC_PROFILE_ICONS    0x0020
+#define STATIC_REALMS           0x0040
+#define STATIC_SUMMONER_SPELLS  0x0080
+#define STATIC_LANGUAGES        0x0100
+#define STATIC_VERSIONS         0x0200
+#define STATIC_ALL              0x02FF
+
+
+/*
+ * API - Static (/lol/static-data)
+ * Rate Limit Applicable: NO
+ * ---
+ *
+ * The static-data API allows you to parse through constant data of the game such as champions, masteries, and
+ * runes.
+ */
+
+/*
+ * Loads the specified categories metadata into the cchamp system.
+ *
+ * By default, the majority of this code runs on a separate thread because it is time intensive.
+ * You may disable this by invoking cchamp_config(CCHAMP_STATIC_MULTITHREADING, 0).
+ */
+void cchamp_static_load(char data);
 #endif
