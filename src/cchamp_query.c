@@ -16,12 +16,14 @@
 
 #include <string.h>
 #include <stdlib.h>
+#include <curl/curl.h>
 #include <cchamp/cchamp.h>
-#include "cchamp_query.h"
-#include "cchamp_utils.h"
+#include <cchamp_query.h>
+#include <cchamp_utils.h>
 
 char *regions[] = {"na1", "eun1", "euw1", "ru", "tr1", "kr", "br1", "oc1", "jp1", "la1", "la2"};
 static char query[1024];
+struct curl_slist *http_headers;
 extern char *get_web_safe_str(char *str);
 
 
@@ -41,6 +43,18 @@ size_t query_response_write(char *ptr, size_t size, size_t nmemb, void *request)
 {
     memcpy(((Request *)request)->response, ptr, size * nmemb);
     return size * nmemb;
+}
+
+void query_update_token(char *key)
+{
+    if (http_headers != NULL) {
+        curl_slist_free_all(http_headers);
+    }
+
+    char token[100] = {0};
+    strcpy(token, "X-Riot-Token: ");
+    strcat(token, key);
+    http_headers = curl_slist_append(http_headers, token);
 }
 
 
@@ -76,19 +90,12 @@ char* build_query(Request* request)
 
     strcpy(query, "https://");
     strcat(query, regions[get_region_index(request->region)]);
-    strcat(query, ".api.riotgames.com/lol/summoner/v3/summoners/");
-
-    if (strlen(request->url_qualifier) > 0) {
-        strcat(query, request->url_qualifier);
-        strcat(query, "/");
-    }
+    strcat(query, ".api.riotgames.com/lol/summoner/v3/summoners");
+    strcat(query, request->path);
 
     char *web_safe = get_web_safe_str(request->keyword);
     strcat(query, web_safe);
     free(web_safe);
-
-    strcat(query, "?api_key=");
-    strcat(query, api.key);
 
     return query;
 }

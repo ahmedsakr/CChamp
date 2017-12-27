@@ -14,13 +14,34 @@
  * along with CChamp.  If not, see <http://www.gnu.org/licenses/>.
  */
 #include <stdlib.h>
+#include <string.h>
 #include <cJSON.h>
-#include "cchamp_summoner.h"
-#include "cchamp.c"
+#include <cchamp_api.h>
+#include <cchamp_query.h>
+#include <cchamp_summoner.h>
 
+static Request request;
 static Summoner *parse_summoner(uint16_t region, char *json);
-extern char *regions[];
-extern char get_region_index(uint16_t region);
+
+
+/**
+ * Dispatches a summoner information retrieval request.
+ *
+ * @param region    The region which the targeted summoner lies in.
+ * @param keyword   The query keyword (i.e. summoner id, account id, or summoner name).
+ * @param path      Specifies to the api which path to take.
+ */
+static char *summoner_request(uint16_t region, char *keyword, char *path)
+{
+    request.api = API_SUMMONER;
+    request.keyword = keyword;
+    request.path = path;
+    request.region = region;
+    cchamp_send_request(&request);
+
+    return request.response;
+}
+
 
 /**
  * Allocates and initializes a summoner object.
@@ -47,7 +68,7 @@ Summoner* summoner_create(char *summoner_name, char *region, uint32_t account_id
  */
 Summoner* get_summoner_by_sid(uint16_t region, char* summoner_id)
 {
-    char *response = summoner_request(region, summoner_id, "");
+    char *response = summoner_request(region, summoner_id, "/");
     return parse_summoner(region, response);
 }
 
@@ -60,7 +81,7 @@ Summoner* get_summoner_by_sid(uint16_t region, char* summoner_id)
  */
 Summoner* get_summoner_by_aid(uint16_t region, char* account_id)
 {
-    char *response = summoner_request(region, account_id, "by-account");
+    char *response = summoner_request(region, account_id, "/by-account/");
     return parse_summoner(region, response);
 }
 
@@ -72,7 +93,7 @@ Summoner* get_summoner_by_aid(uint16_t region, char* account_id)
  */
 Summoner* get_summoner_by_name(uint16_t region, char* summoner_name)
 {
-    char *response = summoner_request(region, summoner_name, "by-name");
+    char *response = summoner_request(region, summoner_name, "/by-name/");
     return parse_summoner(region, response);
 }
 

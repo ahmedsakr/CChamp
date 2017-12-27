@@ -18,13 +18,14 @@
 #include <stdio.h>
 #include <curl/curl.h>
 #include <cchamp/cchamp.h>
-#include "cchamp_api.h"
-#include "cchamp_query.h"
+#include <cchamp_api.h>
+#include <cchamp_query.h>
 
 static CURL *channel;
 static size_t response(char *ptr, size_t size, size_t nmemb, void *userdata);
 extern size_t query_response_write(char *ptr, size_t size, size_t nmemb, void *userdata);
 extern char *build_query(Request* request);
+extern struct curl_slist *http_headers;
 
 RiotAPI api = {
     .rate.per_second        = MAX_REQUESTS_PER_SECOND,
@@ -73,6 +74,7 @@ void cchamp_set_api_key(char *key)
 
     memcpy(api.key, key, API_KEY_LENGTH);
     api.key[API_KEY_LENGTH] = 0x00;
+    query_update_token(api.key);
 }
 
 
@@ -100,5 +102,6 @@ void cchamp_send_request(Request* request)
 
     curl_easy_setopt(channel, CURLOPT_URL, build_query(request));
     curl_easy_setopt(channel, CURLOPT_WRITEDATA, request);
+    curl_easy_setopt(channel, CURLOPT_HTTPHEADER, http_headers);
     CURLcode res = curl_easy_perform(channel);
 }

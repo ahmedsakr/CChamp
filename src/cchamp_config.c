@@ -13,7 +13,7 @@
  * You should have received a copy of the GNU General Public License
  * along with CChamp.  If not, see <http://www.gnu.org/licenses/>.
  */
-#include "cchamp_config.h"
+#include <cchamp_config.h>
 
 uint16_t settings;
 
@@ -29,7 +29,11 @@ void cchamp_config_set(uint16_t config, char value)
     // value must either be 0 or 1
     if (value & 0xFE != 0) return;
 
-    settings |= config;
+    if (value == 0) {
+        settings &= ~config;
+    } else {
+        settings |= config;
+    }
 }
 
 

@@ -16,6 +16,8 @@
 #ifndef CCHAMP_API_H
 #define CCHAMP_API_H
 
+#include <inttypes.h>
+
 #define API_KEY_LENGTH 42
 
 struct api_node {
@@ -26,18 +28,19 @@ struct api_node {
     } rate;
 };
 
+typedef struct api_node RiotAPI;
+
 #define MAX_REQUESTS_PER_SECOND 20
 #define MAX_REQUESTS_PER_TWO_MINUTES 120
 
 struct api_request {
     uint16_t api;
     uint16_t region;
-    char *url_qualifier;
+    char *path;
     char *keyword;
     char response[8192];
 };
 
-typedef struct api_node RiotAPI;
 typedef struct api_request Request;
 extern RiotAPI api;
 

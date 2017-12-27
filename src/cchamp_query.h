@@ -15,16 +15,19 @@
  */
 #ifndef CCHAMP_QUERY_H
 #define CCHAMP_QUERY_H
-#include "cchamp_api.h"
+#include <cchamp_api.h>
 
 struct query_param {
     char key[64];
     char value[64];
 };
-
 typedef struct query_param QueryParam;
 
+extern struct curl_slist *http_headers;
+extern char *regions[];
+
 size_t query_response_write(char *ptr, size_t size, size_t nmemb, void *request);
+void query_update_token(char *key);
 char get_region_index(uint16_t region);
 char* build_query(Request* request);
 
