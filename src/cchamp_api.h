@@ -13,8 +13,8 @@
  * You should have received a copy of the GNU General Public License
  * along with CChamp.  If not, see <http://www.gnu.org/licenses/>.
  */
-#ifndef API_H
-#define API_H
+#ifndef CCHAMP_API_H
+#define CCHAMP_API_H
 
 #define API_KEY_LENGTH 42
 

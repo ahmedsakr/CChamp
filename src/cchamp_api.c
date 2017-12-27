@@ -18,8 +18,8 @@
 #include <stdio.h>
 #include <curl/curl.h>
 #include <cchamp/cchamp.h>
-#include "api.h"
-#include "api_query.h"
+#include "cchamp_api.h"
+#include "cchamp_query.h"
 
 static CURL *channel;
 static size_t response(char *ptr, size_t size, size_t nmemb, void *userdata);

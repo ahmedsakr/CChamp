@@ -39,26 +39,27 @@ void    cchamp_set_max_requests(uint16_t per_second, uint16_t per_two_minutes);
 
 
 // The maximum length the name of a summoner could be.
-#define SUMMONER_NAME_MAX_LENGTH    16
+#define SUMMONER_NAME_MAX_LENGTH 16
 
 // The region's alias maximumum length (i.e. na1, eune).
-#define REGION_MAX_LENGTH       4
+#define REGION_MAX_LENGTH 4
+
 
 /*
  * All regions that are officially supported by the LoL API.
  * Use these constants when providing a region parameter to any API calls.
  */
-#define REGION_NA               0x0001
-#define REGION_EUNE             0x0002
-#define REGION_EUW              0x0004
-#define REGION_RU               0x0008
-#define REGION_TR               0x0010
-#define REGION_KR               0x0020
-#define REGION_BR               0x0040
-#define REGION_OC               0x0080
-#define REGION_JP               0x0100
-#define REGION_LA1              0x0200
-#define REGION_LA2              0x0400
+#define REGION_NA   0x0001
+#define REGION_EUNE 0x0002
+#define REGION_EUW  0x0004
+#define REGION_RU   0x0008
+#define REGION_TR   0x0010
+#define REGION_KR   0x0020
+#define REGION_BR   0x0040
+#define REGION_OC   0x0080
+#define REGION_JP   0x0100
+#define REGION_LA1  0x0200
+#define REGION_LA2  0x0400
 
 
 /*

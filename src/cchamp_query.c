@@ -17,7 +17,7 @@
 #include <string.h>
 #include <stdlib.h>
 #include <cchamp/cchamp.h>
-#include "api_query.h"
+#include "cchamp_query.h"
 #include "cchamp_utils.h"
 
 char *regions[] = {"na1", "eun1", "euw1", "ru", "tr1", "kr", "br1", "oc1", "jp1", "la1", "la2"};

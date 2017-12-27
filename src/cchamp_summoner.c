@@ -14,8 +14,9 @@
  * along with CChamp.  If not, see <http://www.gnu.org/licenses/>.
  */
 #include <stdlib.h>
-#include "cchamp.c"
 #include <cJSON.h>
+#include "cchamp_summoner.h"
+#include "cchamp.c"
 
 static Summoner *parse_summoner(uint16_t region, char *json);
 extern char *regions[];
