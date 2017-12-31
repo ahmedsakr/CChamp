@@ -19,12 +19,9 @@
 #include <curl/curl.h>
 #include <cchamp/cchamp.h>
 #include <cchamp_api.h>
-#include <cchamp_query.h>
 
 static CURL *channel;
-static size_t response(char *ptr, size_t size, size_t nmemb, void *userdata);
-extern size_t query_response_write(char *ptr, size_t size, size_t nmemb, void *userdata);
-extern char *build_query(Request* request);
+uint16_t cc_error;
 extern struct curl_slist *http_headers;
 
 RiotAPI api = {
@@ -92,7 +89,7 @@ void cchamp_set_max_requests(uint16_t per_second, uint16_t per_two_minutes)
 
 
 /**
- * Sends the request to the server, writes the response to a buffer, and exits.
+ * Sends the request to the server, writes the response to a buffer, then exits.
  *
  * @param request A struct containing the request data to be sent out.
  */
@@ -105,5 +102,19 @@ void cchamp_send_request(Request* request)
     curl_easy_setopt(channel, CURLOPT_HTTPHEADER, http_headers);
     CURLcode res = curl_easy_perform(channel);
 
+    // store the http response code and clean up all heap-used memory.
+    curl_easy_getinfo(channel, CURLINFO_RESPONSE_CODE, &request->http_code);
     _query_params_free_all(request);
+
+    // Check the status of the request.
+    // Any errors reported are stored in cc_error.
+    if (request->http_code == 200) {
+        cc_error = EPASS;
+    } else if (request->http_code == 401) {
+        cc_error = EAPIKEY;
+    } else if (request->http_code == 404) {
+        cc_error = ENOTFOUND;
+    } else {
+        cc_error = EUNKNOWN;
+    }
 }

@@ -44,10 +44,11 @@ struct parameters {
 typedef struct parameters Parameters;
 
 struct api_request {
-    uint16_t api;
-    uint16_t region;
-    Parameters params;
-    char response[8192];
+    uint16_t    api;
+    uint16_t    region;
+    Parameters  params;
+    char        response[8192];
+    long        http_code;
 };
 
 typedef struct api_request Request;

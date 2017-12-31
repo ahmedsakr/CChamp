@@ -14,13 +14,14 @@
  * along with CChamp.  If not, see <http://www.gnu.org/licenses/>.
  */
 #include <stdlib.h>
+#include <stdio.h>
 #include <string.h>
 #include <cJSON.h>
 #include <cchamp_api.h>
 #include <cchamp_summoner.h>
 
 static Request request;
-static Summoner *parse_summoner(uint16_t region, char *json);
+static Summoner *_parse_summoner(uint16_t region, char *response);
 
 
 /**
@@ -39,7 +40,7 @@ static char *summoner_request(uint16_t region, char* keyword, char* keyword_type
 
     cchamp_send_request(&request);
 
-    return request.response;
+    return request.http_code != 200 ? NULL: request.response;
 }
 
 
@@ -69,7 +70,7 @@ Summoner* summoner_create(char *summoner_name, char *region, uint32_t account_id
 Summoner* get_summoner_by_sid(uint16_t region, char* summoner_id)
 {
     char *response = summoner_request(region, summoner_id, "/");
-    return parse_summoner(region, response);
+    return response == NULL ? NULL : _parse_summoner(region, response);
 }
 
 
@@ -82,7 +83,7 @@ Summoner* get_summoner_by_sid(uint16_t region, char* summoner_id)
 Summoner* get_summoner_by_aid(uint16_t region, char* account_id)
 {
     char *response = summoner_request(region, account_id, "/by-account/");
-    return parse_summoner(region, response);
+    return response == NULL ? NULL : _parse_summoner(region, response);
 }
 
 /**
@@ -94,13 +95,20 @@ Summoner* get_summoner_by_aid(uint16_t region, char* account_id)
 Summoner* get_summoner_by_name(uint16_t region, char* summoner_name)
 {
     char *response = summoner_request(region, summoner_name, "/by-name/");
-    return parse_summoner(region, response);
+    return response == NULL ? NULL : _parse_summoner(region, response);
 }
 
 
-static Summoner *parse_summoner(uint16_t region, char *json)
+/**
+ * Parses the acquired JSON response from the server so that a summoner struct may be
+ * created and returned.
+ *
+ * @param region    The region in which the player was found.
+ * @param response  The response from the API servers in JSON format.
+ */
+static Summoner *_parse_summoner(uint16_t region, char *response)
 {
-    cJSON *data = cJSON_Parse(json);
+    cJSON *data = cJSON_Parse(response);
     char *name = cJSON_GetObjectItemCaseSensitive(data, "name")->valuestring;
     uint32_t summoner_id = cJSON_GetObjectItemCaseSensitive(data, "id")->valueint;
     uint32_t account_id = cJSON_GetObjectItemCaseSensitive(data, "accountId")->valueint;

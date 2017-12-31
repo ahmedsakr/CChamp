@@ -34,7 +34,7 @@ void    cchamp_close();
  * By default, the number of API calls for 1 second / 120 seconds is the maximum allowed calls.
  * It should be 20 and 100 calls, respectively.
  */
-void    cchamp_set_api_key(char *key);
+void    cchamp_set_api_key(char* key);
 void    cchamp_set_max_requests(uint16_t per_second, uint16_t per_two_minutes);
 
 
@@ -75,6 +75,32 @@ void    cchamp_set_max_requests(uint16_t per_second, uint16_t per_two_minutes);
 #define REGION_JP   0x0100
 #define REGION_LA1  0x0200
 #define REGION_LA2  0x0400
+
+
+/*
+ * The following are all possible errors that may be encountered when using CChamp.
+ */
+
+// No error reported.
+#define EPASS       0
+
+// API Key specified is invalid.
+#define EAPIKEY     1
+
+// The data requested was not found on the servers.
+#define ENOTFOUND   2
+
+// Maximum rate limit has been exceeded.
+#define ERATELIMIT  3
+
+// Unknown error has been reached.
+#define EUNKNOWN    4
+
+
+/*
+ * Errors are reported and stored in cc_error.
+ */
+extern uint16_t cc_error;
 
 
 /*

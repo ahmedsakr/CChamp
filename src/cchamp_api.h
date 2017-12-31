@@ -36,7 +36,7 @@ typedef struct api_node RiotAPI;
 
 extern RiotAPI api;
 
-void    cchamp_send_request(Request* request);
+void cchamp_send_request(Request* request);
 
 // All different types of APIs available for requests
 #define API_CHAMPION_MASTERY    0x0001
