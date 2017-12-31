@@ -45,7 +45,7 @@ int cchamp_init()
     channel = curl_easy_init();
     if (channel == NULL) return 1;
 
-    curl_easy_setopt(channel, CURLOPT_WRITEFUNCTION, query_response_write);
+    curl_easy_setopt(channel, CURLOPT_WRITEFUNCTION, _query_response_received);
     return 0;
 }
 
@@ -74,7 +74,7 @@ void cchamp_set_api_key(char *key)
 
     memcpy(api.key, key, API_KEY_LENGTH);
     api.key[API_KEY_LENGTH] = 0x00;
-    query_update_token(api.key);
+    _query_update_token(api.key);
 }
 
 
@@ -100,8 +100,10 @@ void cchamp_send_request(Request* request)
 {
     if (channel == NULL) return;
 
-    curl_easy_setopt(channel, CURLOPT_URL, build_query(request));
+    curl_easy_setopt(channel, CURLOPT_URL, query_format(request));
     curl_easy_setopt(channel, CURLOPT_WRITEDATA, request);
     curl_easy_setopt(channel, CURLOPT_HTTPHEADER, http_headers);
     CURLcode res = curl_easy_perform(channel);
+
+    _query_params_free_all(request);
 }

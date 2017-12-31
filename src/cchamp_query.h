@@ -15,20 +15,90 @@
  */
 #ifndef CCHAMP_QUERY_H
 #define CCHAMP_QUERY_H
-#include <cchamp_api.h>
+
+struct path_param {
+    char* value;
+    struct path_param* next;
+};
+typedef struct path_param PathParam;
 
 struct query_param {
     char key[64];
     char value[64];
+    struct query_param* next;
 };
 typedef struct query_param QueryParam;
 
-extern struct curl_slist *http_headers;
-extern char *regions[];
+struct parameters {
+    struct {
+        int size;
+        PathParam* head;
+    } path;
 
-size_t query_response_write(char *ptr, size_t size, size_t nmemb, void *request);
-void query_update_token(char *key);
-char get_region_index(uint16_t region);
-char* build_query(Request* request);
+    struct {
+        int size;
+        QueryParam* head;
+    } query;
+};
 
+typedef struct parameters Parameters;
+
+struct api_request {
+    uint16_t api;
+    uint16_t region;
+    Parameters params;
+    char response[8192];
+};
+
+typedef struct api_request Request;
+
+extern struct curl_slist* http_headers;
+extern char* regions[];
+
+
+/*
+ * Functions exported by the cchamp_query implementation.
+ */
+
+
+/*
+ * Acquires the appropriate array index for the specified region.
+ */
+char    get_region_index(uint16_t region);
+
+
+/*
+ * Produces a dispatchable query by extracting data from the provided request.
+ */
+char*   query_format(Request* request);
+
+
+/*
+ * Initializes a new path parameter.
+ */
+PathParam*  path_param_create(char* value, PathParam* next);
+
+
+/*
+ * Internal functions that provide critical logic in the query implementation.
+ */
+
+
+/*
+ * Updates the HTTP headers with the latest API key.
+ */
+void    _query_update_token(char* key);
+
+
+/*
+ * Invoked when data is received during an HTTP request.
+ * Responsible for storing the result accordingly.
+ */
+size_t  _query_response_received(char* ptr, size_t size, size_t nmemb, void* request);
+
+
+/*
+ * Frees all memory used up by the parameter linking implementation (PathParam and QueryParam structs).
+ */
+void    _query_params_free_all(Request* request);
 #endif

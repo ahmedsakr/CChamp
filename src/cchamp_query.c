@@ -39,13 +39,20 @@ extern char *get_web_safe_str(char *str);
  *
  * @return the total number of bytes received.
  */
-size_t query_response_write(char *ptr, size_t size, size_t nmemb, void *request)
+size_t _query_response_received(char *ptr, size_t size, size_t nmemb, void *request)
 {
     memcpy(((Request *)request)->response, ptr, size * nmemb);
     return size * nmemb;
 }
 
-void query_update_token(char *key)
+
+/**
+ * Updates the API token into the HTTP header struct.
+ * The official API requires this header so that it may authorize the query.
+ *
+ * @param key The API key used to authenticate the query.
+ */
+void _query_update_token(char *key)
 {
     if (http_headers != NULL) {
         curl_slist_free_all(http_headers);
@@ -84,18 +91,63 @@ char get_region_index(uint16_t region)
  *
  * @return The fully qualified query url that services the request.
  */
-char* build_query(Request* request)
+char* query_format(Request* request)
 {
     memset(query, 0x00, 1024);
 
     strcpy(query, "https://");
     strcat(query, regions[get_region_index(request->region)]);
     strcat(query, ".api.riotgames.com/lol/summoner/v3/summoners");
-    strcat(query, request->path);
 
-    char *web_safe = get_web_safe_str(request->keyword);
-    strcat(query, web_safe);
-    free(web_safe);
+    char* web_safe;
+    for (PathParam* param = request->params.path.head; param != NULL; param = param->next) {
+        web_safe = get_web_safe_str(param->value);
+        strcat(query, web_safe);
+        free(web_safe);
+    }
 
     return query;
+}
+
+
+/**
+ * Allocates a PathParam struct on the heap.
+ *
+ * @param value The value of the path parameter being created.
+ * @param next  The next PathParameter to link up with.
+ *
+ * @return A pointer to the newly created PathParam struct.
+ */
+PathParam* path_param_create(char* value, PathParam* next)
+{
+    PathParam* path_struct = malloc(sizeof(PathParam));
+    path_struct->value = value;
+    path_struct->next = next;
+
+    return path_struct;
+}
+
+
+/**
+ * Frees all memory allocated for parameter linking (i.e. PathParam and QueryParam structs).
+ *
+ * @param request The request whose parameters logic is being freed.
+ */
+void _query_params_free_all(Request* request)
+{
+    void* temp;
+
+    temp = request->params.path.head;
+    while (temp != NULL) {
+        temp = request->params.path.head->next;
+        free(request->params.path.head);
+        request->params.path.head = (PathParam*)temp;
+    }
+
+    temp = request->params.query.head;
+    while (temp != NULL) {
+        temp = request->params.query.head->next;
+        free(request->params.query.head);
+        request->params.query.head = (QueryParam*)temp;
+    }
 }

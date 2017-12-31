@@ -17,7 +17,6 @@
 #include <string.h>
 #include <cJSON.h>
 #include <cchamp_api.h>
-#include <cchamp_query.h>
 #include <cchamp_summoner.h>
 
 static Request request;
@@ -27,16 +26,17 @@ static Summoner *parse_summoner(uint16_t region, char *json);
 /**
  * Dispatches a summoner information retrieval request.
  *
- * @param region    The region which the targeted summoner lies in.
- * @param keyword   The query keyword (i.e. summoner id, account id, or summoner name).
- * @param path      Specifies to the api which path to take.
+ * @param region        The region which the targeted summoner lies in.
+ * @param keyword       The query keyword (i.e. summoner id, account id, or summoner name).
+ * @param keyword_type  Specifies to the api which path to take based on keyword type.
  */
-static char *summoner_request(uint16_t region, char *keyword, char *path)
+static char *summoner_request(uint16_t region, char* keyword, char* keyword_type)
 {
     request.api = API_SUMMONER;
-    request.keyword = keyword;
-    request.path = path;
+    request.params.path.head = path_param_create(keyword, NULL);
+    request.params.path.head = path_param_create(keyword_type, request.params.path.head);
     request.region = region;
+
     cchamp_send_request(&request);
 
     return request.response;
