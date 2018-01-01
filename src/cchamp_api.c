@@ -40,7 +40,10 @@ RiotAPI api = {
 int cchamp_init()
 {
     channel = curl_easy_init();
-    if (channel == NULL) return 1;
+    if (channel == NULL) {
+        cc_error = ECURL;
+        return 1;
+    }
 
     curl_easy_setopt(channel, CURLOPT_WRITEFUNCTION, _query_response_received);
     return 0;
@@ -114,6 +117,8 @@ void cchamp_send_request(Request* request)
         cc_error = EAPIKEY;
     } else if (request->http_code == 404) {
         cc_error = ENOTFOUND;
+    } else if (request->http_code == 429) {
+        cc_error = ERATELIMIT;
     } else {
         cc_error = EUNKNOWN;
     }

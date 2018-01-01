@@ -84,17 +84,20 @@ void    cchamp_set_max_requests(uint16_t per_second, uint16_t per_two_minutes);
 // No error reported.
 #define EPASS       0
 
-// API Key specified is invalid.
-#define EAPIKEY     1
+// Error: Curl failed to initialize.
+#define ECURL       1
 
-// The data requested was not found on the servers.
-#define ENOTFOUND   2
+// Error: API Key specified is invalid.
+#define EAPIKEY     2
 
-// Maximum rate limit has been exceeded.
-#define ERATELIMIT  3
+// Error: The data requested was not found on the servers.
+#define ENOTFOUND   3
 
-// Unknown error has been reached.
-#define EUNKNOWN    4
+// Error: Maximum rate limit has been reached.
+#define ERATELIMIT  4
+
+// Error: Unknown error has been reached.
+#define EUNKNOWN    5
 
 
 /*

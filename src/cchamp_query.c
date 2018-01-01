@@ -35,7 +35,7 @@ extern char *get_web_safe_str(char *str);
  * @param ptr           A pointer to the beginning of the received response.
  * @param size          The number of blocks of the response.
  * @param nmemb         The number of bytes in this block.
- * @param userdata      The request struct.
+ * @param request       The request struct corresponding to the query.
  *
  * @return the total number of bytes received.
  */
