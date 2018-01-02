@@ -17,6 +17,7 @@
 #include <string.h>
 #include <cchamp_utils.h>
 
+
 /**
  * Acquires the index of the set bit by shifting the bits until the value becomes zero.
  * Intended Usage of this method goes with the assumption that the value you provide only has one

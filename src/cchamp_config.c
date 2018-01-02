@@ -46,5 +46,5 @@ void cchamp_config_set(uint16_t config, char value)
  */
 char cchamp_config_get(uint16_t config)
 {
-    return (settings & config) != 0 ? 1 : 0;
+    return settings & config;
 }

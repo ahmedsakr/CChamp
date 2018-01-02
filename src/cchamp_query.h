@@ -16,41 +16,59 @@
 #ifndef CCHAMP_QUERY_H
 #define CCHAMP_QUERY_H
 
+/*
+ * A request URL is created by appending specific path and query parameters.
+ * path_param and query_param are simple linking structures that allow for the creation
+ * of parameters.
+ */
 struct path_param {
     char* value;
-    struct path_param* next;
+    struct path_param*  next;
 };
-typedef struct path_param PathParam;
 
 struct query_param {
+
+    // The value attribute stores the full "key=val" sequence.
     char value[128];
     struct query_param* next;
 };
-typedef struct query_param QueryParam;
 
+
+/*
+ * Path and Query parameters are now tracked through one main struct: parameters.
+ * This struct also stores the current size of each category of parameters.
+ */
 struct parameters {
     struct {
         int size;
-        PathParam* head;
+        struct path_param*  head;
     } path;
 
     struct {
         int size;
-        QueryParam* head;
+        struct query_param* head;
     } query;
 };
 
-typedef struct parameters Parameters;
 
+/*
+ * A catch-all api_request struct is now created that tracks all the needed data to:
+ * -    Build a fully-qualified query URL.
+ * -    Store the response text and the http code.
+ */
 struct api_request {
-    uint16_t    api;
-    uint16_t    region;
-    Parameters  params;
-    char        response[8192];
-    long        http_code;
+    uint16_t            region;
+    uint16_t            api;
+    struct parameters   params;
+    char                response[8192];
+    long                http_code;
 };
 
-typedef struct api_request Request;
+
+typedef struct path_param   PathParam;
+typedef struct query_param  QueryParam;
+typedef struct parameters   Parameters;
+typedef struct api_request  Request;
 
 extern struct curl_slist* http_headers;
 extern char* regions[];
@@ -59,13 +77,6 @@ extern char* regions[];
 /*
  * Functions exported by the cchamp_query implementation.
  */
-
-
-
-/*
- * Produces a dispatchable query by extracting data from the provided request.
- */
-char*   query_format(Request* request);
 
 
 /*
@@ -83,6 +94,12 @@ QueryParam* query_param_create(char* key, char* value, QueryParam* next);
 /*
  * Internal functions that provide critical logic in the query implementation.
  */
+
+
+/*
+ * Produces a dispatchable query by extracting data from the provided request.
+ */
+char*   _query_format(Request* request);
 
 
 /*

@@ -22,13 +22,60 @@
 #include <cchamp_query.h>
 #include <cchamp_utils.h>
 
-char *regions[] = {     "na1", "eun1", "euw1", "ru", "tr1", \
-                        "kr", "br1", "oc1", "jp1", "la1", "la2"};
-char *api_path[] = { "champion-mastery", "platform", "league", "static-data",    \
-                        "status", "match", "spectator", "summoner", "platform"};
-static char query[1024];
+/*
+ * API path parameters for different combnations of regions and APIs.
+ */
+char *regions[] = {
+    "na1", "eun1", "euw1", "ru", "tr1",
+    "kr", "br1", "oc1", "jp1", "la1", "la2"
+};
+char *api_path[] = {
+    "champion-mastery", "platform", "league", "static-data",
+    "status", "match", "spectator", "summoner", "platform"
+};
+
+
+static char query[512];
 struct curl_slist *http_headers;
 extern char *get_web_safe_str(char *str);
+
+
+/**
+ * Allocates a PathParam struct on the heap.
+ *
+ * @param value The value of the path parameter being created.
+ * @param next  The next PathParameter to link up with.
+ *
+ * @return A pointer to the newly created PathParam struct.
+ */
+PathParam* path_param_create(char* value, PathParam* next)
+{
+    PathParam* path_struct = malloc(sizeof(PathParam));
+    path_struct->value = value;
+    path_struct->next = next;
+
+    return path_struct;
+}
+
+
+/**
+ * Allocates and initializes a QueryParam struct on the heap.
+ *
+ * @param key   The key of the parameter.
+ * @param value The value of the parameter.
+ * @param next  The next QueryParameter to link up with.
+ */
+QueryParam* query_param_create(char* key, char* value, QueryParam* next)
+{
+    QueryParam* query_struct = malloc(sizeof(QueryParam));
+    query_struct->next = next;
+
+    strcpy(query_struct->value, key);
+    strcat(query_struct->value, "=");
+    strcat(query_struct->value, value);
+
+    return query_struct;
+}
 
 
 /**
@@ -78,9 +125,9 @@ void _query_update_token(char *key)
  *
  * @return The fully qualified query url that services the request.
  */
-char* query_format(Request* request)
+char* _query_format(Request* request)
 {
-    memset(query, 0x00, 1024);
+    memset(query, 0x00, 512);
 
     strcpy(query, "https://");
     strcat(query, regions[get_bit_index(request->region)]);
@@ -104,6 +151,7 @@ char* query_format(Request* request)
             strcat(query, web_safe);
             free(web_safe);
 
+            // If there is another query parameter then it must be prefixed with an "&".
             if (param->next != NULL) {
                 strcat(query, "&");
             }
@@ -114,42 +162,6 @@ char* query_format(Request* request)
 }
 
 
-/**
- * Allocates a PathParam struct on the heap.
- *
- * @param value The value of the path parameter being created.
- * @param next  The next PathParameter to link up with.
- *
- * @return A pointer to the newly created PathParam struct.
- */
-PathParam* path_param_create(char* value, PathParam* next)
-{
-    PathParam* path_struct = malloc(sizeof(PathParam));
-    path_struct->value = value;
-    path_struct->next = next;
-
-    return path_struct;
-}
-
-
-/**
- * Allocates and initializes a QueryParam struct on the heap.
- *
- * @param key   The key of the parameter.
- * @param value The value of the parameter.
- * @param next  The next QueryParameter to link up with.
- */
-QueryParam* query_param_create(char* key, char* value, QueryParam* next)
-{
-    QueryParam* query_struct = malloc(sizeof(QueryParam));
-    query_struct->next = next;
-
-    strcpy(query_struct->value, key);
-    strcat(query_struct->value, "=");
-    strcat(query_struct->value, value);
-
-    return query_struct;
-}
 
 
 /**

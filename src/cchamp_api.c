@@ -101,7 +101,7 @@ void cchamp_send_request(Request* request)
 {
     if (channel == NULL) return;
 
-    curl_easy_setopt(channel, CURLOPT_URL, query_format(request));
+    curl_easy_setopt(channel, CURLOPT_URL, _query_format(request));
     curl_easy_setopt(channel, CURLOPT_WRITEDATA, request);
     curl_easy_setopt(channel, CURLOPT_HTTPHEADER, http_headers);
     CURLcode res = curl_easy_perform(channel);
