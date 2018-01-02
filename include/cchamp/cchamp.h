@@ -31,7 +31,7 @@ void    cchamp_close();
 /*
  * Provide cchamp with the necessary authentication token and maybe also limit the rate of access.
  *
- * By default, the number of API calls for 1 second / 120 seconds is the maximum allowed calls.
+ * By default, the number of API calls for 1 second / 100 seconds is the maximum allowed calls.
  * It should be 20 and 100 calls, respectively.
  */
 void    cchamp_set_api_key(char* key);
@@ -39,19 +39,10 @@ void    cchamp_set_max_requests(uint16_t per_second, uint16_t per_two_minutes);
 
 
 /*
- * The versions of all supported APIs.
- *
- * You *must* update these once the version changes.
+ * The current API version.
+ * You *must* update this once the version changes.
  */
-#define CHAMPION_MASTERY_API_VERSION    3
-#define CHAMPION_API_VERSION            3
-#define LEAGUE_API_VERSION              3
-#define LOL_STATIC_DATA_API_VERSION     3
-#define LOL_STATUS_API_VERSION          3
-#define MATCH_API_VERSION               3
-#define SPECTATOR_API_VERSION           3
-#define SUMMONER_API_VERSION            3
-#define THIRD_PARTY_CODE_API_VERSION    3
+#define API_VERSION 3
 
 // The maximum length the name of a summoner could be.
 #define SUMMONER_NAME_MAX_LENGTH 16
@@ -185,5 +176,5 @@ Summoner* get_summoner_by_name(uint16_t region, char* summoner_name);
  * By default, the majority of this code runs on a separate thread because it is time intensive.
  * You may disable this by invoking cchamp_config(CCHAMP_STATIC_MULTITHREADING, 0).
  */
-void cchamp_static_load(char data);
+void cchamp_static_load(uint16_t data);
 #endif

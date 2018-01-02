@@ -22,6 +22,7 @@
 
 static CURL *channel;
 uint16_t cc_error;
+char api_version_ascii = API_VERSION + 0x30;
 extern struct curl_slist *http_headers;
 
 RiotAPI api = {
@@ -113,7 +114,7 @@ void cchamp_send_request(Request* request)
     // Any errors reported are stored in cc_error.
     if (request->http_code == 200) {
         cc_error = EPASS;
-    } else if (request->http_code == 401) {
+    } else if (request->http_code == 401 || request->http_code == 403) {
         cc_error = EAPIKEY;
     } else if (request->http_code == 404) {
         cc_error = ENOTFOUND;

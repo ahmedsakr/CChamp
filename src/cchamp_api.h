@@ -32,9 +32,10 @@ struct api_node {
 typedef struct api_node RiotAPI;
 
 #define MAX_REQUESTS_PER_SECOND 20
-#define MAX_REQUESTS_PER_TWO_MINUTES 120
+#define MAX_REQUESTS_PER_TWO_MINUTES 100
 
 extern RiotAPI api;
+extern char api_version_ascii;
 
 void cchamp_send_request(Request* request);
 
@@ -48,7 +49,5 @@ void cchamp_send_request(Request* request);
 #define API_SPECTATOR           0x0040
 #define API_SUMMONER            0x0080
 #define API_THIRD_PARTY_CODE    0x0100
-
-#define API_VERSION(X) X ## _API_VERSION
 
 #endif

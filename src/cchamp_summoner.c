@@ -19,6 +19,7 @@
 #include <cJSON.h>
 #include <cchamp_api.h>
 #include <cchamp_summoner.h>
+#include <cchamp_utils.h>
 
 static Request request;
 static Summoner *_parse_summoner(uint16_t region, char *response);
@@ -69,7 +70,7 @@ Summoner* summoner_create(char *summoner_name, char *region, uint32_t account_id
  */
 Summoner* get_summoner_by_sid(uint16_t region, char* summoner_id)
 {
-    char *response = summoner_request(region, summoner_id, "/");
+    char *response = summoner_request(region, summoner_id, "/summoners/");
     return response == NULL ? NULL : _parse_summoner(region, response);
 }
 
@@ -82,7 +83,7 @@ Summoner* get_summoner_by_sid(uint16_t region, char* summoner_id)
  */
 Summoner* get_summoner_by_aid(uint16_t region, char* account_id)
 {
-    char *response = summoner_request(region, account_id, "/by-account/");
+    char *response = summoner_request(region, account_id, "/summoners/by-account/");
     return response == NULL ? NULL : _parse_summoner(region, response);
 }
 
@@ -94,7 +95,7 @@ Summoner* get_summoner_by_aid(uint16_t region, char* account_id)
  */
 Summoner* get_summoner_by_name(uint16_t region, char* summoner_name)
 {
-    char *response = summoner_request(region, summoner_name, "/by-name/");
+    char *response = summoner_request(region, summoner_name, "/summoners/by-name/");
     return response == NULL ? NULL : _parse_summoner(region, response);
 }
 
@@ -114,7 +115,7 @@ static Summoner *_parse_summoner(uint16_t region, char *response)
     uint32_t account_id = cJSON_GetObjectItemCaseSensitive(data, "accountId")->valueint;
     int level = cJSON_GetObjectItemCaseSensitive(data, "summonerLevel")->valueint;
     int icon_id = cJSON_GetObjectItemCaseSensitive(data, "profileIconId")->valueint;
-    char *region_str = regions[get_region_index(region)];
+    char *region_str = regions[get_bit_index(region)];
 
     Summoner *summoner = summoner_create(name, region_str, account_id, summoner_id);
     summoner->level = level;

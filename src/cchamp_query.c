@@ -18,10 +18,14 @@
 #include <stdlib.h>
 #include <curl/curl.h>
 #include <cchamp/cchamp.h>
+#include <cchamp_api.h>
 #include <cchamp_query.h>
 #include <cchamp_utils.h>
 
-char *regions[] = {"na1", "eun1", "euw1", "ru", "tr1", "kr", "br1", "oc1", "jp1", "la1", "la2"};
+char *regions[] = {     "na1", "eun1", "euw1", "ru", "tr1", \
+                        "kr", "br1", "oc1", "jp1", "la1", "la2"};
+char *api_path[] = { "champion-mastery", "platform", "league", "static-data",    \
+                        "status", "match", "spectator", "summoner", "platform"};
 static char query[1024];
 struct curl_slist *http_headers;
 extern char *get_web_safe_str(char *str);
@@ -65,23 +69,6 @@ void _query_update_token(char *key)
 }
 
 
-/**
- * Acquires the index of the region by shifting the bits until the value becomes zero.
- * Regions are distinguished by the bit that is on.
- *
- * @param region The 16-bit value hosting the specified region.
- *
- * @return The identifying index of the region.
- */
-char get_region_index(uint16_t region)
-{
-    char index = 0;
-    while ((region >>= 1) != 0) {
-        index++;
-    }
-
-    return index;
-}
 
 
 /**
@@ -96,14 +83,31 @@ char* query_format(Request* request)
     memset(query, 0x00, 1024);
 
     strcpy(query, "https://");
-    strcat(query, regions[get_region_index(request->region)]);
-    strcat(query, ".api.riotgames.com/lol/summoner/v3/summoners");
+    strcat(query, regions[get_bit_index(request->region)]);
+    strcat(query, ".api.riotgames.com/lol/");
+    strcat(query, api_path[get_bit_index(request->api)]);
+    strcat(query, "/v");
+    strcat(query, &api_version_ascii);
 
     char* web_safe;
     for (PathParam* param = request->params.path.head; param != NULL; param = param->next) {
         web_safe = get_web_safe_str(param->value);
         strcat(query, web_safe);
         free(web_safe);
+    }
+
+    if (request->params.query.head != NULL) {
+        strcat(query, "?");
+
+        for (QueryParam* param = request->params.query.head; param != NULL; param = param->next) {
+            web_safe = get_web_safe_str(param->value);
+            strcat(query, web_safe);
+            free(web_safe);
+
+            if (param->next != NULL) {
+                strcat(query, "&");
+            }
+        }
     }
 
     return query;
@@ -125,6 +129,26 @@ PathParam* path_param_create(char* value, PathParam* next)
     path_struct->next = next;
 
     return path_struct;
+}
+
+
+/**
+ * Allocates and initializes a QueryParam struct on the heap.
+ *
+ * @param key   The key of the parameter.
+ * @param value The value of the parameter.
+ * @param next  The next QueryParameter to link up with.
+ */
+QueryParam* query_param_create(char* key, char* value, QueryParam* next)
+{
+    QueryParam* query_struct = malloc(sizeof(QueryParam));
+    query_struct->next = next;
+
+    strcpy(query_struct->value, key);
+    strcat(query_struct->value, "=");
+    strcat(query_struct->value, value);
+
+    return query_struct;
 }
 
 

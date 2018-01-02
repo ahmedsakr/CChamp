@@ -15,6 +15,8 @@
  */
 #ifndef CCHAMP_UTILS_H
 #define CCHAMP_UTILS_H
+#include <inttypes.h>
 
-char *get_web_safe_str(char *str);
+char    get_bit_index(uint16_t val);
+char*   get_web_safe_str(char *str);
 #endif

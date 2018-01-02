@@ -23,8 +23,7 @@ struct path_param {
 typedef struct path_param PathParam;
 
 struct query_param {
-    char key[64];
-    char value[64];
+    char value[128];
     struct query_param* next;
 };
 typedef struct query_param QueryParam;
@@ -62,11 +61,6 @@ extern char* regions[];
  */
 
 
-/*
- * Acquires the appropriate array index for the specified region.
- */
-char    get_region_index(uint16_t region);
-
 
 /*
  * Produces a dispatchable query by extracting data from the provided request.
@@ -78,6 +72,12 @@ char*   query_format(Request* request);
  * Initializes a new path parameter.
  */
 PathParam*  path_param_create(char* value, PathParam* next);
+
+
+/*
+ * Initializes a new query parameter.
+ */
+QueryParam* query_param_create(char* key, char* value, QueryParam* next);
 
 
 /*

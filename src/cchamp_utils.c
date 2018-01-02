@@ -15,6 +15,27 @@
  */
 #include <stdlib.h>
 #include <string.h>
+#include <cchamp_utils.h>
+
+/**
+ * Acquires the index of the set bit by shifting the bits until the value becomes zero.
+ * Intended Usage of this method goes with the assumption that the value you provide only has one
+ * bit set.
+ *
+ * @param val   A 16-bit value that presumably has one bit on.
+ *
+ * @return The bit index in the value.
+ */
+char get_bit_index(uint16_t val)
+{
+    char index = 0;
+    while ((val >>= 1) != 0) {
+        index++;
+    }
+
+    return index;
+}
+
 
 /**
  * Replaces all illegal web strings (i.e. spaces) to their safe equivalent.
