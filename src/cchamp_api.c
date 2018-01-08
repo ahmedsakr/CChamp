@@ -19,6 +19,7 @@
 #include <curl/curl.h>
 #include <cchamp/cchamp.h>
 #include <cchamp_api.h>
+#include <cchamp_static.h>
 
 static CURL *channel;
 uint16_t cc_error;
@@ -45,8 +46,9 @@ int cchamp_init()
         cc_error = ECURL;
         return 1;
     }
-
     curl_easy_setopt(channel, CURLOPT_WRITEFUNCTION, _query_response_received);
+
+    __allocate_static_pages();
     return 0;
 }
 
@@ -60,6 +62,7 @@ int cchamp_init()
 void cchamp_close()
 {
     curl_easy_cleanup(channel);
+    __free_static_pages();
 }
 
 
