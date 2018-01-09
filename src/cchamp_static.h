@@ -40,15 +40,15 @@ struct category {
  *
  * Under this assumption, checking of the data integrity for any category is quick.
  */
-extern void* categories;
+extern struct category* categories;
 
 /*
  * Thanks to the contiguous and respective manner assumption, accessing the first data page ptr is constant time.
  *
  * For GET_FIRST_PAGE, a NULL ptr is expected if the categories bit for the specific category flag is cleared.
  */
-#define GET_CATEGORY(category)   ((struct category *)categories + get_bit_index(category));
-#define GET_FIRST_PAGE(category) (void *)(GET_CATEGORY(category)->__first_page);
+#define GET_CATEGORY(category)      (categories + get_bit_index(category))
+#define GET_FIRST_PAGE(category)    (void *)(GET_CATEGORY(category)->__first_page)
 
 /*
  * There needs to be a quick way for determining if a category's pages have been initialized from the server.
@@ -58,7 +58,7 @@ extern void* categories;
  * A set (1) bit indicates data for the specific category is initialized, otherwise a cleared bit means the
  * data in the category's pages is either invalidated or never loaded in the first space.
  */
-static uint16_t __static_data_flags;
+extern uint16_t __static_data_flags;
 
 
 /*

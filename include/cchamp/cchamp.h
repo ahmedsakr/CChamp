@@ -177,4 +177,11 @@ Summoner* get_summoner_by_name(uint16_t region, char* summoner_name);
  * You may disable this by invoking cchamp_config(CCHAMP_STATIC_MULTITHREADING, 0).
  */
 void cchamp_static_load(uint16_t data);
+
+/*
+ * Invalidates the specified categories metadata.
+ * Any operations on the targeted categories futher on will require a fresh read from the server.
+ */
+void cchamp_static_invalidate(uint16_t data);
+
 #endif
