@@ -40,8 +40,7 @@ static char *summoner_request(uint16_t region, char* keyword, char* keyword_type
     request.region = region;
 
     cchamp_send_request(&request);
-
-    return request.http_code != 200 ? NULL: request.response;
+    return request.http_code != 200 ? NULL : request.response.addr;
 }
 
 

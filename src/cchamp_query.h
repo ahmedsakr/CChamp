@@ -60,8 +60,32 @@ struct api_request {
     uint16_t            region;
     uint16_t            api;
     struct parameters   params;
-    char                response[8192];
+
+    struct {
+        int     size;
+        void*   addr;
+    }                   response;
+
     long                http_code;
+};
+
+
+#define QUERY_BLOCK_NUM     8
+#define QUERY_BLOCK_SIZE    256 * 1024
+
+/*
+ * Query buffer maintains 8 exclusive blocks of memory for use in receiving
+ * data.
+ *
+ * Each block of memory is 256KB. So, a total of 256KB * 8 = 2MB is reserved contiguously.
+ */
+struct query_buf {
+
+    // tracks if a block of memory is in-use (1) or free (0).
+    uint8_t status;
+
+    // a pointer to the first block of memory.
+    void*   addr;
 };
 
 
@@ -69,6 +93,7 @@ typedef struct path_param   PathParam;
 typedef struct query_param  QueryParam;
 typedef struct parameters   Parameters;
 typedef struct api_request  Request;
+typedef struct query_buf    __QBUFF;
 
 extern struct curl_slist* http_headers;
 extern char* regions[];
@@ -95,6 +120,23 @@ QueryParam* query_param_create(char* key, char* value, QueryParam* next);
  * Internal functions that provide critical logic in the query implementation.
  */
 
+
+/*
+ * Map necessary anonymous pages for query response storage.
+ */
+void    __query_blocks_allocate();
+
+
+/*
+ * Return the mapped anonymous pages to the operating system.
+ */
+void    __query_blocks_free();
+
+
+/*
+ * Claims an unused block, returning the start of the address to the buffer.
+ */
+void *  _query_blocks_claim();
 
 /*
  * Produces a dispatchable query by extracting data from the provided request.

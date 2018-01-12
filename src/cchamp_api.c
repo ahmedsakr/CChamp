@@ -41,14 +41,20 @@ RiotAPI api = {
  */
 int cchamp_init()
 {
+    // map all necessary pages for backing cchamp internal data.
+    __static_pages_allocate();
+    __query_blocks_allocate();
+
+    // Attempt to initialize the curl instance which will be used as the http medium.
     channel = curl_easy_init();
     if (channel == NULL) {
         cc_error = ECURL;
+        cchamp_close();
+
         return 1;
     }
-    curl_easy_setopt(channel, CURLOPT_WRITEFUNCTION, _query_response_received);
 
-    __allocate_static_pages();
+    curl_easy_setopt(channel, CURLOPT_WRITEFUNCTION, _query_response_received);
     return 0;
 }
 
@@ -61,8 +67,13 @@ int cchamp_init()
  */
 void cchamp_close()
 {
-    curl_easy_cleanup(channel);
-    __free_static_pages();
+    if (channel != NULL) {
+        curl_easy_cleanup(channel);
+    }
+
+    // return all anonymously backed pages to the OS.
+    __static_pages_free();
+    __query_blocks_free();
 }
 
 

@@ -18,6 +18,10 @@
 #include <stdlib.h>
 
 
+uint16_t __static_data_flags;
+struct category* categories;
+
+
 /*
  * Number of Anonymous pages to be backed for specific static api categories.
  * This number is determined by estimating the maximum required data storage of a specific category.
@@ -32,9 +36,6 @@
 #define PAGES_SUMMONER_SPELLS  2
 #define PAGES_LANGUAGES        2
 #define PAGES_VERSIONS         2
-
-uint16_t __static_data_flags;
-struct category* categories;
 
 static int __categories_pages[] = {
     PAGES_RUNES,
@@ -60,6 +61,21 @@ void cchamp_static_load(uint16_t data)
 
 
 /**
+ * Invalidates the loaded data for the specific static categories.
+ * All operations on the invalidated static categories will result in a server update before proceeding.
+ *
+ * @param data The static categories to invalidate.
+ */
+void cchamp_static_invalidate(uint16_t data)
+{
+
+    // The corresponding anonymous pages are not affected by this invokation.
+    // Anonymous pages are kept in memory throughout the whole life cycle of cchamp.
+    __static_data_flags &= ~data;
+}
+
+
+/**
  * Mmaps a sufficient amount of anonymous pages for static categories.
  * The number of anonymous backing pages per static category is determined by __categories_pages config
  * array in this file. Manipulating PAGES_* constants will alter the number of pages mmaped for categories.
@@ -67,7 +83,7 @@ void cchamp_static_load(uint16_t data)
  * @return 0    If the allocation succeeded.
  *         1    Failure in mmaping anonymous pages.
  */
-int __allocate_static_pages()
+int __static_pages_allocate()
 {
     if (categories != NULL) {
 
@@ -95,12 +111,11 @@ int __allocate_static_pages()
 }
 
 
-
 /**
  * Frees all memory tied up for tracking and maintaining anonymous pages for the static api.
  * Should only be invoked on exit (i.e. cchamp_close()).
  */
-void __free_static_pages()
+void __static_pages_free()
 {
     struct category* cat = categories;
 

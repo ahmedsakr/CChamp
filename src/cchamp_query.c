@@ -16,7 +16,9 @@
 
 #include <string.h>
 #include <stdlib.h>
+#include <stdio.h>
 #include <curl/curl.h>
+#include <sys/mman.h>
 #include <cchamp/cchamp.h>
 #include <cchamp_api.h>
 #include <cchamp_query.h>
@@ -35,6 +37,7 @@ char *api_path[] = {
 };
 
 
+static __QBUFF buffer;
 static char query[512];
 struct curl_slist *http_headers;
 extern char *get_web_safe_str(char *str);
@@ -79,6 +82,46 @@ QueryParam* query_param_create(char* key, char* value, QueryParam* next)
 
 
 /**
+ * Anonymously maps necessary pages for having sufficient memory backing for query responses
+ * for up to QUERY_BLOCK_NUM (8) concurrent queries.
+ */
+void __query_blocks_allocate()
+{
+    buffer.status = 0;
+    buffer.addr = mmap(NULL, QUERY_BLOCK_NUM * QUERY_BLOCK_SIZE, PROT_READ | PROT_WRITE, MAP_ANONYMOUS | MAP_PRIVATE, -1, 0);
+}
+
+
+/**
+ * Frees all anonymously mapped pages for the query.
+ */
+void __query_blocks_free()
+{
+    munmap(buffer.addr, QUERY_BLOCK_NUM * QUERY_BLOCK_SIZE);
+}
+
+
+void * _query_blocks_claim()
+{
+    uint8_t free = 1;
+    uint8_t b_index = 0x01;
+
+    while ((buffer.status & b_index) != 0)
+    {
+        b_index <<= 1;
+    }
+
+    // No buffers are free
+    if (b_index == 0xFF) {
+        return NULL;
+    } else {
+        return buffer.addr + (QUERY_BLOCK_SIZE * get_bit_index(b_index));
+    }
+
+}
+
+
+/**
  * Transfers the response received from the server to the request's response buffer.
  * Curl is instructed to pass the relevant Request struct into this function using curl_easy_setopt() in
  * cchamp_init().
@@ -90,9 +133,18 @@ QueryParam* query_param_create(char* key, char* value, QueryParam* next)
  *
  * @return the total number of bytes received.
  */
-size_t _query_response_received(char *ptr, size_t size, size_t nmemb, void *request)
+size_t _query_response_received(char *ptr, size_t size, size_t nmemb, void *argument)
 {
-    memcpy(((Request *)request)->response, ptr, size * nmemb);
+    Request *request = (Request *)argument;
+    if (request->response.addr == NULL && buffer.status != 0xFF) {
+        request->response.addr = _query_blocks_claim();
+        request->response.size = size * nmemb;
+        memcpy(request->response.addr, ptr, size * nmemb);
+    } else {
+        memcpy(request->response.addr + request->response.size, ptr, size * nmemb);
+        request->response.size += size * nmemb;
+    }
+
     return size * nmemb;
 }
 

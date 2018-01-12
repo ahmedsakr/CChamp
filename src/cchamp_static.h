@@ -66,7 +66,7 @@ extern uint16_t __static_data_flags;
  *
  * This function is in charge of mmaping all necessary pages for the static API.
  */
-int __allocate_static_pages();
+int __static_pages_allocate();
 
 
 /*
@@ -75,6 +75,6 @@ int __allocate_static_pages();
  *
  * This function munmaps() all anonymously mmaped pages for static categories.
  */
-void __free_static_pages();
+void __static_pages_free();
 
 #endif
