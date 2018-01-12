@@ -138,6 +138,15 @@ void    __query_blocks_free();
  */
 void *  _query_blocks_claim();
 
+
+/*
+ * Relinquishes the specified block of the buffer, marking it as free.
+ *
+ * This does NOT free up the memory the block uses.
+ */
+void    _query_blocks_relinquish(uint8_t block);
+
+
 /*
  * Produces a dispatchable query by extracting data from the provided request.
  */

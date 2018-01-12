@@ -38,7 +38,7 @@ char *api_path[] = {
 
 
 static __QBUFF buffer;
-static char query[512];
+static char url[512];
 struct curl_slist *http_headers;
 extern char *get_web_safe_str(char *str);
 
@@ -101,23 +101,41 @@ void __query_blocks_free()
 }
 
 
+/**
+ * Attempts to claim a block in the buffer.
+ *
+ * @return      NULL    If it was unsucessful in acquiring a block (i.e. all blocks are in-use).
+ *              Pointer If it was successful. The starting address for the block is returned.
+ */
 void * _query_blocks_claim()
 {
-    uint8_t free = 1;
-    uint8_t b_index = 0x01;
+    uint8_t free_buffer = 0x01;
 
-    while ((buffer.status & b_index) != 0)
+    // Keep looping until the first cleared bit is detected.
+    while ((buffer.status & free_buffer) != 0)
     {
-        b_index <<= 1;
+        free_buffer <<= 1;
     }
 
-    // No buffers are free
-    if (b_index == 0xFF) {
+    // if free_buffer is 0, then it must have overflowed which only happens when no bufers are available.
+    if (free_buffer == 0) {
         return NULL;
     } else {
-        return buffer.addr + (QUERY_BLOCK_SIZE * get_bit_index(b_index));
+        return buffer.addr + (QUERY_BLOCK_SIZE * get_bit_index(free_buffer));
     }
 
+}
+
+
+/*
+ * Clears the specified bit from the buffer status, effectively setting it to free.
+ * Data in the block pages do not have to be flushed.
+ *
+ * @param block The identifier for the block in the buffer.
+ */
+void _query_blocks_relinquish(uint8_t block)
+{
+    buffer.status &= ~block;
 }
 
 
@@ -135,16 +153,25 @@ void * _query_blocks_claim()
  */
 size_t _query_response_received(char *ptr, size_t size, size_t nmemb, void *argument)
 {
+    // This is guaranteed by the curl_easy_setopt call in cchamp_init().
     Request *request = (Request *)argument;
-    if (request->response.addr == NULL && buffer.status != 0xFF) {
-        request->response.addr = _query_blocks_claim();
-        request->response.size = size * nmemb;
-        memcpy(request->response.addr, ptr, size * nmemb);
-    } else {
-        memcpy(request->response.addr + request->response.size, ptr, size * nmemb);
-        request->response.size += size * nmemb;
+
+    /*
+     * If the request does not have a block in the buffer reserved to it yet, then
+     * an attempt to claim one must be done before writing any data.
+     */
+    if (request->response.addr == NULL) {
+        if (buffer.status != 0xFF) {
+            request->response.addr = _query_blocks_claim();
+        } else {
+
+            // TODO: No buffer blocks are free. How to handle this unlikely case?
+            return 0;
+        }
     }
 
+    memcpy(request->response.addr + request->response.size, ptr, size * nmemb);
+    request->response.size += size * nmemb;
     return size * nmemb;
 }
 
@@ -168,8 +195,6 @@ void _query_update_token(char *key)
 }
 
 
-
-
 /**
  * Builds the query url by extracting the necessary information from a request struct.
  *
@@ -179,41 +204,39 @@ void _query_update_token(char *key)
  */
 char* _query_format(Request* request)
 {
-    memset(query, 0x00, 512);
+    memset(url, 0x00, 512);
 
-    strcpy(query, "https://");
-    strcat(query, regions[get_bit_index(request->region)]);
-    strcat(query, ".api.riotgames.com/lol/");
-    strcat(query, api_path[get_bit_index(request->api)]);
-    strcat(query, "/v");
-    strcat(query, &api_version_ascii);
+    strcpy(url, "https://");
+    strcat(url, regions[get_bit_index(request->region)]);
+    strcat(url, ".api.riotgames.com/lol/");
+    strcat(url, api_path[get_bit_index(request->api)]);
+    strcat(url, "/v");
+    strcat(url, &api_version_ascii);
 
     char* web_safe;
     for (PathParam* param = request->params.path.head; param != NULL; param = param->next) {
         web_safe = get_web_safe_str(param->value);
-        strcat(query, web_safe);
+        strcat(url, web_safe);
         free(web_safe);
     }
 
     if (request->params.query.head != NULL) {
-        strcat(query, "?");
+        strcat(url, "?");
 
         for (QueryParam* param = request->params.query.head; param != NULL; param = param->next) {
             web_safe = get_web_safe_str(param->value);
-            strcat(query, web_safe);
+            strcat(url, web_safe);
             free(web_safe);
 
             // If there is another query parameter then it must be prefixed with an "&".
             if (param->next != NULL) {
-                strcat(query, "&");
+                strcat(url, "&");
             }
         }
     }
 
-    return query;
+    return url;
 }
-
-
 
 
 /**
