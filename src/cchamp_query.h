@@ -144,7 +144,7 @@ void *  _query_blocks_claim();
  *
  * This does NOT free up the memory the block uses.
  */
-void    _query_blocks_relinquish(uint8_t block);
+void    _query_blocks_relinquish(Request* request);
 
 
 /*

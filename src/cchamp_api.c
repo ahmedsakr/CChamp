@@ -15,7 +15,6 @@
  */
 
 #include <string.h>
-#include <stdio.h>
 #include <curl/curl.h>
 #include <cchamp/cchamp.h>
 #include <cchamp_api.h>

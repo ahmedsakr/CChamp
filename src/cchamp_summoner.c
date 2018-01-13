@@ -14,7 +14,6 @@
  * along with CChamp.  If not, see <http://www.gnu.org/licenses/>.
  */
 #include <stdlib.h>
-#include <stdio.h>
 #include <string.h>
 #include <cJSON.h>
 #include <cchamp_api.h>
@@ -120,6 +119,9 @@ static Summoner *_parse_summoner(uint16_t region, char *response)
     summoner->level = level;
     summoner->profile_icon_id = icon_id;
 
+    // clean up all memory used for this request now that it has been completed.
+    _query_blocks_relinquish(&request);
     cJSON_Delete(data);
+
     return summoner;
 }

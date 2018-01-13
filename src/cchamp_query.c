@@ -16,7 +16,6 @@
 
 #include <string.h>
 #include <stdlib.h>
-#include <stdio.h>
 #include <curl/curl.h>
 #include <sys/mman.h>
 #include <cchamp/cchamp.h>
@@ -117,25 +116,38 @@ void * _query_blocks_claim()
         free_buffer <<= 1;
     }
 
-    // if free_buffer is 0, then it must have overflowed which only happens when no bufers are available.
+    // if free_buffer is 0, then it must have overflowed which only happens when no buffers are available.
     if (free_buffer == 0) {
         return NULL;
-    } else {
-        return buffer.addr + (QUERY_BLOCK_SIZE * get_bit_index(free_buffer));
     }
 
+    // Claim the block in the buffer by setting its corresponding bit in the buffer status.
+    buffer.status |= free_buffer;
+    return buffer.addr + (QUERY_BLOCK_SIZE * get_bit_index(free_buffer));
 }
 
 
 /*
  * Clears the specified bit from the buffer status, effectively setting it to free.
- * Data in the block pages do not have to be flushed.
+ * Data in the block pages do not have to be flushed, only invalidated.
  *
  * @param block The identifier for the block in the buffer.
  */
-void _query_blocks_relinquish(uint8_t block)
+void _query_blocks_relinquish(Request* request)
 {
-    buffer.status &= ~block;
+    /*
+     * Using the request's response address, the block index in the buffer must be reverse engineered.
+     * It is quite simple to do so because all blocks have fixed sizes.
+     */
+    size_t offset = (uintptr_t)request->response.addr - (uintptr_t)buffer.addr;
+    size_t block_index = offset / QUERY_BLOCK_SIZE;
+
+    // Flush the response struct in the request in preparation for a relinquish of the block.
+    request->response.size = 0;
+    request->response.addr = NULL;
+
+    // Clear the corresponding block index.
+    buffer.status &= ~(1 << block_index);
 }
 
 
