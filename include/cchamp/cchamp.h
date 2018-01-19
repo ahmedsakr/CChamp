@@ -87,8 +87,12 @@ void    cchamp_set_max_requests(uint16_t per_second, uint16_t per_two_minutes);
 // Error: Maximum rate limit has been reached.
 #define ERATELIMIT  4
 
+// Error: Cannot establish a new connection due to all available resources being exhausted.
+#define E2MANY      5
+
 // Error: Unknown error has been reached.
-#define EUNKNOWN    5
+#define EUNKNOWN    6
+
 
 
 /*
@@ -178,9 +182,13 @@ Summoner* get_summoner_by_name(uint16_t region, char* summoner_name);
  */
 void cchamp_static_load(uint16_t data);
 
+
 /*
- * Invalidates the specified categories metadata.
+ * Invalidates the specified static data categories.
  * Any operations on the targeted categories futher on will require a fresh read from the server.
+ *
+ * Keep in mind before invalidating data that Riot limits method calls to static data to 10 calls an hour.
+ * Use wisely.
  */
 void cchamp_static_invalidate(uint16_t data);
 

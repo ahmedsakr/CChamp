@@ -177,11 +177,16 @@ size_t _query_response_received(char *ptr, size_t size, size_t nmemb, void *argu
             request->response.addr = _query_blocks_claim();
         } else {
 
-            // TODO: No buffer blocks are free. How to handle this unlikely case?
+            /*
+             * All possible buffers are currently exhausted and this new response cannot be serviced.
+             * Set cc_error to indicate this encountered error.
+             */
+            cc_error = E2MANY;
             return 0;
         }
     }
 
+    // Load the received data into the correct buffer address and refresh the size with the latest one.
     memcpy(request->response.addr + request->response.size, ptr, size * nmemb);
     request->response.size += size * nmemb;
     return size * nmemb;
@@ -200,6 +205,10 @@ void _query_update_token(char *key)
         curl_slist_free_all(http_headers);
     }
 
+    /*
+     * Token is fixed size at 100 characters as this should always suffice.
+     * The API key is always 42 characters long.
+     */
     char token[100] = {0};
     strcpy(token, "X-Riot-Token: ");
     strcat(token, key);

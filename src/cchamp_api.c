@@ -119,12 +119,11 @@ void cchamp_send_request(Request* request)
     curl_easy_setopt(channel, CURLOPT_HTTPHEADER, http_headers);
     CURLcode res = curl_easy_perform(channel);
 
-    // store the http response code and clean up all heap-used memory.
+    // Store the http response code and clean up all heap-used memory.
     curl_easy_getinfo(channel, CURLINFO_RESPONSE_CODE, &request->http_code);
     _query_params_free_all(request);
 
-    // Check the status of the request.
-    // Any errors reported are stored in cc_error.
+    // Check the status of the request. Any errors reported are stored in cc_error.
     if (request->http_code == 200) {
         cc_error = EPASS;
     } else if (request->http_code == 401 || request->http_code == 403) {

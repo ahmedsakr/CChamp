@@ -16,6 +16,7 @@
 #ifndef CCHAMP_STATIC_H
 #define CCHAMP_STATIC_H
 #include <inttypes.h>
+#include <cchamp_utils.h>
 
 // The number of data categories accessible by the static API.
 #define STATIC_CATEGORY_SIZE 10
@@ -60,6 +61,13 @@ extern struct category* categories;
  */
 extern uint16_t __static_data_flags;
 
+
+/*
+ * Changes the status for the specified static categories.
+ *
+ * Takes into account memory protection.
+ */
+void __static_pages_status(uint16_t data, char op);
 
 /*
  * Should only be called by cchamp_init() and no where else.

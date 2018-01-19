@@ -17,10 +17,12 @@
 #include <sys/mman.h>
 #include <stdlib.h>
 
-
 uint16_t __static_data_flags;
 struct category* categories;
 
+// Page status operations
+#define PAGE_STATUS_VALIDATE    0x00
+#define PAGE_STATUS_INVALIDATE  0x01
 
 /*
  * Number of Anonymous pages to be backed for specific static api categories.
@@ -69,16 +71,77 @@ void cchamp_static_load(uint16_t data)
 void cchamp_static_invalidate(uint16_t data)
 {
 
-    // The corresponding anonymous pages are not affected by this invokation.
-    // Anonymous pages are kept in memory throughout the whole life cycle of cchamp.
-    __static_data_flags &= ~data;
+    /*
+     * The corresponding anonymous pages are not affected by this invokation.
+     * Anonymous pages are kept in memory throughout the whole life cycle of cchamp.
+     */
+
+    __static_pages_status(data, PAGE_STATUS_INVALIDATE);
 }
 
 
 /**
- * Mmaps a sufficient amount of anonymous pages for static categories.
+ * Validates the speicifed static categories.
+ * Invocation of this function should only occur after the data for the specific static category
+ * is understood to be final.
+ *
+ * @param data  The static categories to validate.
+ */
+void __static_pages_validate(uint16_t data)
+{
+
+    __static_pages_status(data, PAGE_STATUS_VALIDATE);
+}
+
+
+/**
+ * Handles validation and invlidation of static categories.
+ * Should not be invoked directly.
+ *
+ * @param data  The static categories to operate on.
+ * @param op    The operation to be applied to the categories.
+ */
+void __static_pages_status(uint16_t data, char op)
+{
+    // Although only internally invoked, it is safer to check for data correctness.
+    if (op != PAGE_STATUS_INVALIDATE && op != PAGE_STATUS_VALIDATE) {
+        return;
+    }
+
+    uint16_t cat_index = 1;
+    while (cat_index <= data) {
+
+        /*
+         * Handles both validation and invaidation operations.
+         *
+         * On invalidation, all corresponding pages protection must be overriden to allow writing on top of
+         * reading. This is to allow for future calls to load data into the pages.
+         *
+         * On validation, it is understood that the data is now considered final. Hence, the memory proection
+         * for the pages are overriden to be read-only.
+         */
+        if (data & cat_index) {
+            struct category* cat = GET_CATEGORY(cat_index);
+            int prot = op == PAGE_STATUS_VALIDATE ? PROT_READ : PROT_WRITE | PROT_READ;
+            mprotect(cat->__first_page, cat->__init_pages_size, prot);
+
+            if (op == PAGE_STATUS_VALIDATE) {
+                __static_data_flags |= cat_index;
+            } else if (op == PAGE_STATUS_INVALIDATE) {
+                __static_data_flags &= ~data;
+            }
+        }
+
+        cat_index <<= 1;
+    }
+}
+
+/**
+ * Memory maps a sufficient amount of anonymous pages for static categories.
  * The number of anonymous backing pages per static category is determined by __categories_pages config
- * array in this file. Manipulating PAGES_* constants will alter the number of pages mmaped for categories.
+ * array in this file.
+ *
+ * Manipulating PAGES_* constants will alter the number of pages mmaped for categories.
  *
  * @return 0    If the allocation succeeded.
  *         1    Failure in mmaping anonymous pages.
@@ -87,7 +150,7 @@ int __static_pages_allocate()
 {
     if (categories != NULL) {
 
-        // if categories is not null, then this function must have been previously invoked.
+        // If categories is not null, then this function must have been previously invoked.
         // Simply terminating with no effect is sufficient.
         return 0;
     }

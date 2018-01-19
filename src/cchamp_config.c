@@ -22,14 +22,14 @@ uint16_t settings;
  * Overrides the current specified setting.
  *
  * @param config    The selected setting to be modified.
- * @param value     The new value of the setting (must be 0 or 1).
+ * @param op        The requested config operation. (0 for clear, 1 for set)
  */
-void cchamp_config_set(uint16_t config, char value)
+void cchamp_config_set(uint16_t config, char op)
 {
-    // value must either be 0 or 1
-    if (value & 0xFE != 0) return;
+    // Value must be either 0 or 1.
+    if (op & 0xFE != 0) return;
 
-    if (value == 0) {
+    if (op == 0) {
         settings &= ~config;
     } else {
         settings |= config;
@@ -46,5 +46,14 @@ void cchamp_config_set(uint16_t config, char value)
  */
 char cchamp_config_get(uint16_t config)
 {
+
+    /*
+     * Only one bit is allowed in the config parameter.
+     * This checks if config is a power-of-two (i.e. only one bit is set).
+     *
+     * If it is not power-of-two, then 0 is returned.
+     */
+    if (config & (config - 1)) return 0;
+
     return settings & config;
 }
