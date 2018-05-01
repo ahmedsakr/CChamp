@@ -28,16 +28,16 @@ struct category* categories;
  * Number of Anonymous pages to be backed for specific static api categories.
  * This number is determined by estimating the maximum required data storage of a specific category.
  */
-#define PAGES_RUNES            2
-#define PAGES_MASTERIES        2
-#define PAGES_CHAMPIONS        2
-#define PAGES_ITEMS            2
-#define PAGES_MAPS             2
-#define PAGES_PROFILE_ICONS    2
-#define PAGES_REALMS           2
-#define PAGES_SUMMONER_SPELLS  2
-#define PAGES_LANGUAGES        2
-#define PAGES_VERSIONS         2
+#define PAGES_RUNES            8
+#define PAGES_MASTERIES        8
+#define PAGES_CHAMPIONS        8
+#define PAGES_ITEMS            8
+#define PAGES_MAPS             8
+#define PAGES_PROFILE_ICONS    8
+#define PAGES_REALMS           8
+#define PAGES_SUMMONER_SPELLS  8
+#define PAGES_LANGUAGES        8
+#define PAGES_VERSIONS         8
 
 static int __categories_pages[] = {
     PAGES_RUNES,
@@ -58,7 +58,8 @@ static int __categories_pages[] = {
  */
 void cchamp_static_load(uint16_t data)
 {
-
+    // Invalidate all pages that are about to be updated to prevent access until the load is complete.
+    cchamp_static_invalidate(data);
 }
 
 
@@ -95,7 +96,7 @@ void __static_pages_validate(uint16_t data)
 
 
 /**
- * Handles validation and invlidation of static categories.
+ * Handles validation and invalidation of static categories.
  * Should not be invoked directly.
  *
  * @param data  The static categories to operate on.
@@ -117,18 +118,18 @@ void __static_pages_status(uint16_t data, char op)
          * On invalidation, all corresponding pages protection must be overriden to allow writing on top of
          * reading. This is to allow for future calls to load data into the pages.
          *
-         * On validation, it is understood that the data is now considered final. Hence, the memory proection
-         * for the pages are overriden to be read-only.
+         * On validation, it is understood that the data is now considered final. Hence, the memory protection
+         * for the pages is overriden to be read-only.
          */
         if (data & cat_index) {
             struct category* cat = GET_CATEGORY(cat_index);
             int prot = op == PAGE_STATUS_VALIDATE ? PROT_READ : PROT_WRITE | PROT_READ;
-            mprotect(cat->__first_page, cat->__init_pages_size, prot);
+            mprotect(cat->__first_page, cat->__init_pages_size * PAGE_SIZE, prot);
 
             if (op == PAGE_STATUS_VALIDATE) {
                 __static_data_flags |= cat_index;
             } else if (op == PAGE_STATUS_INVALIDATE) {
-                __static_data_flags &= ~data;
+                __static_data_flags &= ~cat_index;
             }
         }
 
@@ -143,8 +144,8 @@ void __static_pages_status(uint16_t data, char op)
  *
  * Manipulating PAGES_* constants will alter the number of pages mmaped for categories.
  *
- * @return 0    If the allocation succeeded.
- *         1    Failure in mmaping anonymous pages.
+ * @return A non-zero, positive number of how many bytes were allocated.
+ *         0    Failure in mmaping anonymous pages.
  */
 int __static_pages_allocate()
 {
@@ -158,19 +159,25 @@ int __static_pages_allocate()
     // Allocate, on the heap, the necessary headers for keeping track of the anonymous pages.
     categories = (struct category *)malloc(sizeof(struct category) * STATIC_CATEGORY_SIZE);
     struct category* cat = categories;
+    int protflags = PROT_READ | PROT_WRITE;
+    int pageflags = MAP_ANONYMOUS | MAP_PRIVATE;
+    int pages_alloc = 0;
 
     for (int i = 0; i < STATIC_CATEGORY_SIZE; cat++, i++) {
         cat->__init_pages_size = __categories_pages[i];
-        cat->__first_page = mmap(NULL, cat->__init_pages_size * 4096, PROT_READ | PROT_WRITE, MAP_ANONYMOUS | MAP_PRIVATE, -1, 0);
+        cat->__first_page = mmap(NULL, cat->__init_pages_size * PAGE_SIZE, protflags, pageflags, -1, 0);
 
         // if the anonymous page mapping failed, then an error indicating value is returned.
         // errno should be read instead of cc_error in this case as mmap() sets errno on failure.
         if (cat->__first_page == MAP_FAILED) {
-            return 1;
+            __static_pages_free();
+            return 0;
         }
+
+        pages_alloc += cat->__init_pages_size;
     }
 
-    return 0;
+    return pages_alloc * PAGE_SIZE;
 }
 
 
@@ -186,7 +193,7 @@ void __static_pages_free()
         if (cat->__first_page != NULL && cat->__first_page != MAP_FAILED) {
 
             // free the anonymous pages backed for this category.
-            munmap(cat->__first_page, cat->__init_pages_size * 4096);
+            munmap(cat->__first_page, cat->__init_pages_size * PAGE_SIZE);
         }
     }
 

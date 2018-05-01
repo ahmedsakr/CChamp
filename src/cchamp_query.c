@@ -83,11 +83,19 @@ QueryParam* query_param_create(char* key, char* value, QueryParam* next)
 /**
  * Anonymously maps necessary pages for having sufficient memory backing for query responses
  * for up to QUERY_BLOCK_NUM (8) concurrent queries.
+ *
+ * @return      On success, a non-zero, postive number that represents the number of bytes allocated.
+ *              0   If the mmap has failed.
  */
-void __query_blocks_allocate()
+int __query_blocks_allocate()
 {
     buffer.status = 0;
     buffer.addr = mmap(NULL, QUERY_BLOCK_NUM * QUERY_BLOCK_SIZE, PROT_READ | PROT_WRITE, MAP_ANONYMOUS | MAP_PRIVATE, -1, 0);
+    if (buffer.addr == MAP_FAILED) {
+        return 0;
+    }
+
+    return QUERY_BLOCK_NUM * QUERY_BLOCK_SIZE;
 }
 
 
@@ -96,7 +104,9 @@ void __query_blocks_allocate()
  */
 void __query_blocks_free()
 {
-    munmap(buffer.addr, QUERY_BLOCK_NUM * QUERY_BLOCK_SIZE);
+    if (buffer.addr != MAP_FAILED || buffer.addr != NULL) {
+        munmap(buffer.addr, QUERY_BLOCK_NUM * QUERY_BLOCK_SIZE);
+    }
 }
 
 
@@ -226,13 +236,8 @@ void _query_update_token(char *key)
 char* _query_format(Request* request)
 {
     memset(url, 0x00, 512);
-
-    strcpy(url, "https://");
-    strcat(url, regions[get_bit_index(request->region)]);
-    strcat(url, ".api.riotgames.com/lol/");
-    strcat(url, api_path[get_bit_index(request->api)]);
-    strcat(url, "/v");
-    strcat(url, &api_version_ascii);
+    sprintf(url, "https://%s.api.riotgames.com/lol/%s/v%d", regions[get_bit_index(request->region)],
+            api_path[get_bit_index(request->api)], API_VERSION);
 
     char* web_safe;
     for (PathParam* param = request->params.path.head; param != NULL; param = param->next) {

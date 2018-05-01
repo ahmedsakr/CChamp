@@ -35,7 +35,6 @@ typedef struct api_node RiotAPI;
 #define MAX_REQUESTS_PER_TWO_MINUTES 100
 
 extern RiotAPI api;
-extern char api_version_ascii;
 
 void cchamp_send_request(Request* request);
 

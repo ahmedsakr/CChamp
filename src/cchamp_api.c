@@ -22,7 +22,6 @@
 
 static CURL *channel;
 uint16_t cc_error;
-char api_version_ascii = API_VERSION + 0x30;
 extern struct curl_slist *http_headers;
 
 RiotAPI api = {
@@ -32,8 +31,8 @@ RiotAPI api = {
 
 
 /**
- * Initialize the library by preparing curl. An option is passed to curl to override the default write
- * function (i.e. fwrite) to a custom one.
+ * Initialize the library by preparing curl.
+ * An option is passed to curl to override the default write function (i.e. fwrite) to a custom one.
  *
  * @return  0 If curl successfully initialized.
  *          1 If curl failed.
@@ -41,8 +40,7 @@ RiotAPI api = {
 int cchamp_init()
 {
     // map all necessary pages for backing cchamp internal data.
-    __static_pages_allocate();
-    __query_blocks_allocate();
+    int reserved = __static_pages_allocate() + __query_blocks_allocate();
 
     // Attempt to initialize the curl instance which will be used as the http medium.
     channel = curl_easy_init();

@@ -57,16 +57,16 @@ struct parameters {
  * -    Store the response text and the http code.
  */
 struct api_request {
-    uint16_t            region;
-    uint16_t            api;
-    struct parameters   params;
+    uint16_t region;
+    uint16_t api;
+    struct parameters params;
 
     struct {
-        int     size;
-        void*   addr;
-    }                   response;
+        int size;
+        void *addr;
+    } response;
 
-    long                http_code;
+    long http_code;
 };
 
 
@@ -124,7 +124,7 @@ QueryParam* query_param_create(char* key, char* value, QueryParam* next);
 /*
  * Map necessary anonymous pages for query response storage.
  */
-void    __query_blocks_allocate();
+int __query_blocks_allocate();
 
 
 /*
