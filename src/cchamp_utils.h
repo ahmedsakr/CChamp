@@ -20,5 +20,5 @@
 #define PAGE_SIZE 4096
 
 char    get_bit_index(uint16_t val);
-char*   get_web_safe_str(char *str);
+void   webstr(char *dest, char *str);
 #endif

@@ -39,6 +39,8 @@ struct category* categories;
 #define PAGES_LANGUAGES        8
 #define PAGES_VERSIONS         8
 
+void cchamp_static_invalidate(uint16_t data);
+
 static int __categories_pages[] = {
     PAGES_RUNES,
     PAGES_MASTERIES,
@@ -73,7 +75,7 @@ void cchamp_static_invalidate(uint16_t data)
 {
 
     /*
-     * The corresponding anonymous pages are not affected by this invokation.
+     * The corresponding anonymous pages are not affected by this invocation.
      * Anonymous pages are kept in memory throughout the whole life cycle of cchamp.
      */
 

@@ -102,7 +102,7 @@ extern uint16_t cc_error;
 
 
 /*
- * Lists all possible configuration alterations so thta you may customize cchamp behaviour to better
+ * Lists all possible configuration alterations so that you may customize cchamp behaviour to better
  * suit your needs.
  */
 #define CCHAMP_STATIC_MULTITHREADING 0x0001

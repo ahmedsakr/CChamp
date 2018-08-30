@@ -13,8 +13,8 @@
  * You should have received a copy of the GNU General Public License
  * along with CChamp.  If not, see <http://www.gnu.org/licenses/>.
  */
-#ifndef CCHAMP_QUERY_H
-#define CCHAMP_QUERY_H
+#ifndef CCHAMP_CHANNEL_H
+#define CCHAMP_CHANNEL_H
 
 /*
  * A request URL is created by appending specific path and query parameters.
@@ -22,7 +22,7 @@
  * of parameters.
  */
 struct path_param {
-    char* value;
+    char value[128];
     struct path_param*  next;
 };
 
@@ -79,7 +79,7 @@ struct api_request {
  *
  * Each block of memory is 256KB. So, a total of 256KB * 8 = 2MB is reserved contiguously.
  */
-struct query_buf {
+struct channel_buf {
 
     // tracks if a block of memory is in-use (1) or free (0).
     uint8_t status;
@@ -93,81 +93,66 @@ typedef struct path_param   PathParam;
 typedef struct query_param  QueryParam;
 typedef struct parameters   Parameters;
 typedef struct api_request  Request;
-typedef struct query_buf    __QBUFF;
+typedef struct channel_buf    __CBUFF;
 
 extern struct curl_slist* http_headers;
 extern char* regions[];
 
 
 /*
- * Functions exported by the cchamp_query implementation.
+ * Functions exported by the cchamp_channel implementation.
  */
 
 
 /*
  * Initializes a new path parameter.
  */
-PathParam*  path_param_create(char* value, PathParam* next);
+PathParam*  path_param(Request *request, char* value, PathParam* next);
 
 
 /*
  * Initializes a new query parameter.
  */
-QueryParam* query_param_create(char* key, char* value, QueryParam* next);
-
-
-/*
- * Internal functions that provide critical logic in the query implementation.
- */
-
-
-/*
- * Map necessary anonymous pages for query response storage.
- */
-int __query_blocks_allocate();
-
-
-/*
- * Return the mapped anonymous pages to the operating system.
- */
-void    __query_blocks_free();
-
-
-/*
- * Claims an unused block, returning the start of the address to the buffer.
- */
-void *  _query_blocks_claim();
-
-
-/*
- * Relinquishes the specified block of the buffer, marking it as free.
- *
- * This does NOT free up the memory the block uses.
- */
-void    _query_blocks_relinquish(Request* request);
+QueryParam* query_param(Request *request, char* key, char* value, QueryParam* next);
 
 
 /*
  * Produces a dispatchable query by extracting data from the provided request.
  */
-char*   _query_format(Request* request);
+char*   channel_url(Request* request);
 
 
 /*
  * Updates the HTTP headers with the latest API key.
  */
-void    _query_update_token(char* key);
+void    channel_update_token(char* key);
 
 
 /*
  * Invoked when data is received during an HTTP request.
  * Responsible for storing the result accordingly.
  */
-size_t  _query_response_received(char* ptr, size_t size, size_t nmemb, void* request);
+size_t  channel_response_received(char* ptr, size_t size, size_t nmemb, void* request);
 
 
 /*
- * Frees all memory used up by the parameter linking implementation (PathParam and QueryParam structs).
+ * Cleans up all resources used by the request.
  */
-void    _query_params_free_all(Request* request);
+void    channel_clean(Request* request);
+
+
+/*
+ * Internal functions that are exposed by this interface due to the necessity for external invocation.
+ */
+
+/*
+ * Map necessary anonymous pages for query response storage.
+ */
+int     __channel_blocks_allocate();
+
+
+/*
+ * Return the mapped anonymous pages to the operating system.
+ */
+void    __channel_blocks_free();
 #endif

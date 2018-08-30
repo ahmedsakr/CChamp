@@ -34,8 +34,8 @@ static Summoner *_parse_summoner(uint16_t region, char *response);
 static char *summoner_request(uint16_t region, char* keyword, char* keyword_type)
 {
     request.api = API_SUMMONER;
-    request.params.path.head = path_param_create(keyword, NULL);
-    request.params.path.head = path_param_create(keyword_type, request.params.path.head);
+    request.params.path.head = path_param(&request, keyword, NULL);
+    request.params.path.head = path_param(&request, keyword_type, request.params.path.head);
     request.region = region;
 
     cchamp_send_request(&request);
@@ -120,7 +120,7 @@ static Summoner *_parse_summoner(uint16_t region, char *response)
     summoner->profile_icon_id = icon_id;
 
     // clean up all memory used for this request now that it has been completed.
-    _query_blocks_relinquish(&request);
+    channel_clean(&request);
     cJSON_Delete(data);
 
     return summoner;

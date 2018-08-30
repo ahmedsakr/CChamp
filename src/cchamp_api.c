@@ -40,7 +40,7 @@ RiotAPI api = {
 int cchamp_init()
 {
     // map all necessary pages for backing cchamp internal data.
-    int reserved = __static_pages_allocate() + __query_blocks_allocate();
+    int reserved = __static_pages_allocate() + __channel_blocks_allocate();
 
     // Attempt to initialize the curl instance which will be used as the http medium.
     channel = curl_easy_init();
@@ -51,7 +51,7 @@ int cchamp_init()
         return 1;
     }
 
-    curl_easy_setopt(channel, CURLOPT_WRITEFUNCTION, _query_response_received);
+    curl_easy_setopt(channel, CURLOPT_WRITEFUNCTION, channel_response_received);
     return 0;
 }
 
@@ -70,7 +70,7 @@ void cchamp_close()
 
     // return all anonymously backed pages to the OS.
     __static_pages_free();
-    __query_blocks_free();
+    __channel_blocks_free();
 }
 
 
@@ -86,7 +86,7 @@ void cchamp_set_api_key(char *key)
 
     memcpy(api.key, key, API_KEY_LENGTH);
     api.key[API_KEY_LENGTH] = 0x00;
-    _query_update_token(api.key);
+    channel_update_token(api.key);
 }
 
 
@@ -112,14 +112,13 @@ void cchamp_send_request(Request* request)
 {
     if (channel == NULL) return;
 
-    curl_easy_setopt(channel, CURLOPT_URL, _query_format(request));
+    curl_easy_setopt(channel, CURLOPT_URL, channel_url(request));
     curl_easy_setopt(channel, CURLOPT_WRITEDATA, request);
     curl_easy_setopt(channel, CURLOPT_HTTPHEADER, http_headers);
     CURLcode res = curl_easy_perform(channel);
 
-    // Store the http response code and clean up all heap-used memory.
+    // Store the http response code.
     curl_easy_getinfo(channel, CURLINFO_RESPONSE_CODE, &request->http_code);
-    _query_params_free_all(request);
 
     // Check the status of the request. Any errors reported are stored in cc_error.
     if (request->http_code == 200) {

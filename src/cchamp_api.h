@@ -17,7 +17,7 @@
 #define CCHAMP_API_H
 
 #include <inttypes.h>
-#include <cchamp_query.h>
+#include <cchamp_channel.h>
 
 #define API_KEY_LENGTH 42
 
