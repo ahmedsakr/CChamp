@@ -24,7 +24,7 @@
 #include <cchamp_utils.h>
 
 /*
- * API path parameters for different combnations of regions and APIs.
+ * API path arguments for different combinations of regions and APIs.
  */
 char *regions[] = {
     "na1", "eun1", "euw1", "ru", "tr1",
@@ -45,44 +45,44 @@ int __channel_blocks_allocate();
 void __channel_blocks_free();
 void * __channel_blocks_claim();
 void __channel_blocks_relinquish(Request* request);
-void __channel_params_free(Request *request);
+void __channel_arguments_free(Argument* request, int *size);
 
 
 /**
- * Allocates a PathParam struct on the heap.
+ * Creates a path argument on the heap.
  *
- * @param value The value of the path parameter being created.
- * @param next  The next PathParameter to link up with.
+ * @param value The value of the path argument being created.
+ * @param next  The next Argument to link up with.
  *
- * @return A pointer to the newly created PathParam struct.
+ * @return A pointer to the newly created argument.
  */
-PathParam* path_param(Request *request, char* value, PathParam* next)
+Argument* path_arg(Request *request, char* value, Argument* next)
 {
-    PathParam* param = calloc(1, sizeof(PathParam));
-    param->next = next;
-    webstr(param->value, value);
+    Argument* arg = calloc(1, sizeof(Argument));
+    arg->next = next;
+    webstr(arg->value, value);
 
-    request->params.path.size++;
-    return param;
+    request->arguments.path.size++;
+    return arg;
 }
 
 
 /**
- * Allocates and initializes a QueryParam struct on the heap.
+ * Creates a query argument on the heap.
  *
- * @param key   The key of the parameter.
- * @param value The value of the parameter.
- * @param next  The next QueryParameter to link up with.
+ * @param key   The key of the argument.
+ * @param value The value of the argument.
+ * @param next  The next Argument to link up with.
  */
-QueryParam* query_param(Request *request, char* key, char* value, QueryParam* next)
+Argument* query_arg(Request *request, char* key, char* value, Argument* next)
 {
-    QueryParam* param = calloc(1, sizeof(QueryParam));
-    param->next = next;
-    sprintf(param->value, "%s=%s", key, value);
-    webstr(param->value, value);
+    Argument* arg = calloc(1, sizeof(Argument));
+    arg->next = next;
+    sprintf(arg->value, "%s=%s", key, value);
+    webstr(arg->value, value);
 
-    request->params.query.size++;
-    return param;
+    request->arguments.query.size++;
+    return arg;
 }
 
 
@@ -121,18 +121,18 @@ char* channel_url(Request* request)
     sprintf(url, "https://%s.api.riotgames.com/lol/%s/v%d", regions[get_bit_index(request->region)],
             api_path[get_bit_index(request->api)], API_VERSION);
 
-    for (PathParam* param = request->params.path.head; param != NULL; param = param->next) {
-        strcat(url, param->value);
+    for (Argument* arg = request->arguments.path.head; arg != NULL; arg = arg->next) {
+        strcat(url, arg->value);
     }
 
-    if (request->params.query.head != NULL) {
+    if (request->arguments.query.head != NULL) {
         strcat(url, "?");
 
-        for (QueryParam* param = request->params.query.head; param != NULL; param = param->next) {
-            strcat(url, param->value);
+        for (Argument* arg = request->arguments.query.head; arg != NULL; arg = arg->next) {
+            strcat(url, arg->value);
 
-            // If there is another query parameter then it must be prefixed with an "&".
-            if (param->next != NULL) {
+            // If there is another query argumenteter then it must be prefixed with an "&".
+            if (arg->next != NULL) {
                 strcat(url, "&");
             }
         }
@@ -185,20 +185,24 @@ size_t channel_response_received(char *ptr, size_t size, size_t nmemb, void *arg
 
 
 /**
- * Gives up the block held by this channel, and frees up heap-memory used for parameters.
+ * Give up channel memory resources held by this request.
  *
- * @param request The request whose parameters logic is being freed.
+ * @param request The request whose argumenteters logic is being freed.
  */
 void channel_clean(Request* request)
 {
+    // Mark the channel block as free.
     __channel_blocks_relinquish(request);
-    __channel_params_free(request);
+
+    // Free up the heap arguments.
+    __channel_arguments_free(request->arguments.path.head, &request->arguments.path.size);
+    __channel_arguments_free(request->arguments.query.head, &request->arguments.query.size);
 }
 
 
 /**
  * Anonymously maps necessary pages for having sufficient memory backing for query responses
- * for up to QUERY_BLOCK_NUM (8) concurrent queries.
+ * for up to CHANNEL_BLOCK_NUM (8) concurrent queries.
  *
  * @return      On success, a non-zero, postive number that represents the number of bytes allocated.
  *              0   If the mmap has failed.
@@ -206,12 +210,12 @@ void channel_clean(Request* request)
 int __channel_blocks_allocate()
 {
     buffer.status = 0;
-    buffer.addr = mmap(NULL, QUERY_BLOCK_NUM * QUERY_BLOCK_SIZE, PROT_READ | PROT_WRITE, MAP_ANONYMOUS | MAP_PRIVATE, -1, 0);
+    buffer.addr = mmap(NULL, CHANNEL_BLOCK_NUM * CHANNEL_BLOCK_SIZE, PROT_READ | PROT_WRITE, MAP_ANONYMOUS | MAP_PRIVATE, -1, 0);
     if (buffer.addr == MAP_FAILED) {
         return 0;
     }
 
-    return QUERY_BLOCK_NUM * QUERY_BLOCK_SIZE;
+    return CHANNEL_BLOCK_NUM * CHANNEL_BLOCK_SIZE;
 }
 
 
@@ -221,7 +225,7 @@ int __channel_blocks_allocate()
 void __channel_blocks_free()
 {
     if (buffer.addr != MAP_FAILED || buffer.addr != NULL) {
-        munmap(buffer.addr, QUERY_BLOCK_NUM * QUERY_BLOCK_SIZE);
+        munmap(buffer.addr, CHANNEL_BLOCK_NUM * CHANNEL_BLOCK_SIZE);
     }
 }
 
@@ -249,7 +253,7 @@ void * __channel_blocks_claim()
 
     // Claim the block in the buffer by setting its corresponding bit in the buffer status.
     buffer.status |= free_buffer;
-    return buffer.addr + (QUERY_BLOCK_SIZE * get_bit_index(free_buffer));
+    return buffer.addr + (CHANNEL_BLOCK_SIZE * get_bit_index(free_buffer));
 }
 
 
@@ -266,7 +270,7 @@ void __channel_blocks_relinquish(Request* request)
      * It is quite simple to do so because all blocks have fixed sizes.
      */
     size_t offset = (uintptr_t)request->response.addr - (uintptr_t)buffer.addr;
-    size_t block_index = offset / QUERY_BLOCK_SIZE;
+    size_t block_index = offset / CHANNEL_BLOCK_SIZE;
 
     // Flush the response struct in the request in preparation for a relinquish of the block.
     request->response.size = 0;
@@ -278,26 +282,21 @@ void __channel_blocks_relinquish(Request* request)
 
 
 
-void __channel_params_free(Request *request)
+/**
+ * Free up a linked-list structured argument list.
+ *
+ * @param head The head node of the argument linked list.
+ * @param size The tracked size of the arguments.
+ */
+void __channel_arguments_free(Argument *head, int *size)
 {
-    void *mem;
-    void *temp;
-    mem = request->params.path.head;
-    temp = mem;
-    while (mem != NULL) {
-        temp = mem;
-        mem = ((PathParam *)mem)->next;
-        free(temp);
+    Argument* temp;
+    while (head != NULL) {
+        temp = head;
+        head = head->next;
+        free((void *)temp);
     }
 
-    mem = request->params.query.head;
-    temp = mem;
-    while (mem != NULL) {
-        temp = mem;
-        mem = ((QueryParam *)mem)->next;
-        free(temp);
-    }
-
-    request->params.path.size = 0;
-    request->params.query.size = 0;
+    // All arguments have been freed; reset the arguments size counter to 0.
+    *size = 0;
 }

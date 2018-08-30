@@ -17,36 +17,31 @@
 #define CCHAMP_CHANNEL_H
 
 /*
- * A request URL is created by appending specific path and query parameters.
- * path_param and query_param are simple linking structures that allow for the creation
- * of parameters.
+ * A request URL is created by appending specific path and query arguments.
+ * path_arg and query_arg are simple linking structures that allow for the creation
+ * of arguments.
  */
-struct path_param {
-    char value[128];
-    struct path_param*  next;
-};
-
-struct query_param {
+struct arg {
 
     // The value attribute stores the full "key=val" sequence.
     char value[128];
-    struct query_param* next;
+    struct arg* next;
 };
 
 
 /*
- * Path and Query parameters are now tracked through one main struct: parameters.
- * This struct also stores the current size of each category of parameters.
+ * Path and Query arguments are now tracked through one main struct: arguments.
+ * This struct also stores the current size of each category of arguments.
  */
-struct parameters {
+struct arguments {
     struct {
         int size;
-        struct path_param*  head;
+        struct arg* head;
     } path;
 
     struct {
         int size;
-        struct query_param* head;
+        struct arg* head;
     } query;
 };
 
@@ -59,7 +54,7 @@ struct parameters {
 struct api_request {
     uint16_t region;
     uint16_t api;
-    struct parameters params;
+    struct arguments arguments;
 
     struct {
         int size;
@@ -70,8 +65,8 @@ struct api_request {
 };
 
 
-#define QUERY_BLOCK_NUM     8
-#define QUERY_BLOCK_SIZE    256 * 1024
+#define CHANNEL_BLOCK_NUM     8
+#define CHANNEL_BLOCK_SIZE    256 * 1024
 
 /*
  * Query buffer maintains 8 exclusive blocks of memory for use in receiving
@@ -89,11 +84,9 @@ struct channel_buf {
 };
 
 
-typedef struct path_param   PathParam;
-typedef struct query_param  QueryParam;
-typedef struct parameters   Parameters;
-typedef struct api_request  Request;
-typedef struct channel_buf    __CBUFF;
+typedef struct arg Argument;
+typedef struct api_request Request;
+typedef struct channel_buf __CBUFF;
 
 extern struct curl_slist* http_headers;
 extern char* regions[];
@@ -105,19 +98,19 @@ extern char* regions[];
 
 
 /*
- * Initializes a new path parameter.
+ * Creates a new path argument.
  */
-PathParam*  path_param(Request *request, char* value, PathParam* next);
+Argument*  path_arg(Request *request, char* value, Argument* next);
 
 
 /*
- * Initializes a new query parameter.
+ * Creates a new query argument.
  */
-QueryParam* query_param(Request *request, char* key, char* value, QueryParam* next);
+Argument* query_arg(Request *request, char* key, char* value, Argument* next);
 
 
 /*
- * Produces a dispatchable query by extracting data from the provided request.
+ * Produces a fuly-qualified url by extracting data from the provided request.
  */
 char*   channel_url(Request* request);
 

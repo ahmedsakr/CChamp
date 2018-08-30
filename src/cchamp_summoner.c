@@ -34,8 +34,8 @@ static Summoner *_parse_summoner(uint16_t region, char *response);
 static char *summoner_request(uint16_t region, char* keyword, char* keyword_type)
 {
     request.api = API_SUMMONER;
-    request.params.path.head = path_param(&request, keyword, NULL);
-    request.params.path.head = path_param(&request, keyword_type, request.params.path.head);
+    request.arguments.path.head = path_arg(&request, keyword, NULL);
+    request.arguments.path.head = path_arg(&request, keyword_type, request.arguments.path.head);
     request.region = region;
 
     cchamp_send_request(&request);
