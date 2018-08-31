@@ -13,7 +13,7 @@
  * You should have received a copy of the GNU General Public License
  * along with CChamp.  If not, see <http://www.gnu.org/licenses/>.
  */
-#include <cchamp_config.h>
+#include "cchamp_config.h"
 
 uint16_t settings;
 

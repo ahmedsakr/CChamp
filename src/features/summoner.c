@@ -15,9 +15,9 @@
  */
 #include <stdlib.h>
 #include <string.h>
+#include "summoner.h"
 #include <cJSON.h>
-#include <cchamp_api.h>
-#include <cchamp_summoner.h>
+#include <network/riot/api.h>
 #include <cchamp_utils.h>
 
 static Request request;

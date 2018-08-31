@@ -19,9 +19,9 @@
 #include <curl/curl.h>
 #include <sys/mman.h>
 #include <cchamp/cchamp.h>
-#include <cchamp_api.h>
-#include <cchamp_channel.h>
 #include <cchamp_utils.h>
+#include "riot/api.h"
+#include "channel.h"
 
 /*
  * API path arguments for different combinations of regions and APIs.

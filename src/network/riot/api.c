@@ -17,8 +17,8 @@
 #include <string.h>
 #include <curl/curl.h>
 #include <cchamp/cchamp.h>
-#include <cchamp_api.h>
-#include <cchamp_static.h>
+#include "api.h"
+#include "ddragon/static.h"
 
 static CURL *channel;
 uint16_t cc_error;
@@ -66,6 +66,7 @@ void cchamp_close()
 {
     if (channel != NULL) {
         curl_easy_cleanup(channel);
+        channel = NULL;
     }
 
     // return all anonymously backed pages to the OS.

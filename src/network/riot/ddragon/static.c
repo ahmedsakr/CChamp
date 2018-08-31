@@ -13,7 +13,7 @@
  * You should have received a copy of the GNU General Public License
  * along with CChamp.  If not, see <http://www.gnu.org/licenses/>.
  */
-#include <cchamp_static.h>
+#include "static.h"
 #include <sys/mman.h>
 #include <stdlib.h>
 
