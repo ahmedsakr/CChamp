@@ -51,40 +51,17 @@ extern struct category* categories;
 #define GET_CATEGORY(category)      (categories + get_bit_index(category))
 #define GET_FIRST_PAGE(category)    (void *)(GET_CATEGORY(category)->__first_page)
 
-/*
- * There needs to be a quick way for determining if a category's pages have been initialized from the server.
- * Using the STATIC_* constants defined in <cchamp/cchamp.h>, You may read this variable's bits to determine
- * if the data is valid or not.
- *
- * A set (1) bit indicates data for the specific category is initialized, otherwise a cleared bit means the
- * data in the category's pages is either invalidated or never loaded in the first space.
- */
-extern uint16_t __static_data_flags;
-
 void cchamp_static_load(uint16_t data);
 void cchamp_static_invalidate(uint16_t data);
 
 /*
- * Changes the status for the specified static categories.
- *
- * Takes into account memory protection.
+ * Maps all necessary pages for the static API.
  */
-void __static_pages_status(uint16_t data, char op);
+int static_pages_allocate();
 
 /*
- * Should only be called by cchamp_init() and no where else.
- *
- * This function is in charge of mmaping all necessary pages for the static API.
+ * Unmaps all anonymously mmaped pages for static categories.
  */
-int __static_pages_allocate();
-
-
-/*
- * Should only be called by cchamp_close() and no where else.
- * If you wish to free specific static category pages, invoke cchamp_static_invalidate() instead.
- *
- * This function munmaps() all anonymously mmaped pages for static categories.
- */
-void __static_pages_free();
+void static_pages_free();
 
 #endif

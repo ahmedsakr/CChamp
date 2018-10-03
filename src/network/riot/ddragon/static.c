@@ -17,7 +17,11 @@
 #include <sys/mman.h>
 #include <stdlib.h>
 
-uint16_t __static_data_flags;
+/*
+ * Using the STATIC_* constants defined in <cchamp/cchamp.h>, You may read this variable's bits to determine
+ * if the data is valid or not.
+ */
+static uint16_t valid;
 struct category* categories;
 
 // Page status operations
@@ -39,8 +43,6 @@ struct category* categories;
 #define PAGES_LANGUAGES        8
 #define PAGES_VERSIONS         8
 
-void cchamp_static_invalidate(uint16_t data);
-
 static int __categories_pages[] = {
     PAGES_RUNES,
     PAGES_MASTERIES,
@@ -54,49 +56,6 @@ static int __categories_pages[] = {
     PAGES_VERSIONS
 };
 
-
-/**
- * Loads the specified static data into memory.
- */
-void cchamp_static_load(uint16_t data)
-{
-    // Invalidate all pages that are about to be updated to prevent access until the load is complete.
-    cchamp_static_invalidate(data);
-}
-
-
-/**
- * Invalidates the loaded data for the specific static categories.
- * All operations on the invalidated static categories will result in a server update before proceeding.
- *
- * @param data The static categories to invalidate.
- */
-void cchamp_static_invalidate(uint16_t data)
-{
-
-    /*
-     * The corresponding anonymous pages are not affected by this invocation.
-     * Anonymous pages are kept in memory throughout the whole life cycle of cchamp.
-     */
-
-    __static_pages_status(data, PAGE_STATUS_INVALIDATE);
-}
-
-
-/**
- * Validates the speicifed static categories.
- * Invocation of this function should only occur after the data for the specific static category
- * is understood to be final.
- *
- * @param data  The static categories to validate.
- */
-void __static_pages_validate(uint16_t data)
-{
-
-    __static_pages_status(data, PAGE_STATUS_VALIDATE);
-}
-
-
 /**
  * Handles validation and invalidation of static categories.
  * Should not be invoked directly.
@@ -104,7 +63,7 @@ void __static_pages_validate(uint16_t data)
  * @param data  The static categories to operate on.
  * @param op    The operation to be applied to the categories.
  */
-void __static_pages_status(uint16_t data, char op)
+static void __static_pages_status(uint16_t data, char op)
 {
     // Although only internally invoked, it is safer to check for data correctness.
     if (op != PAGE_STATUS_INVALIDATE && op != PAGE_STATUS_VALIDATE) {
@@ -129,9 +88,9 @@ void __static_pages_status(uint16_t data, char op)
             mprotect(cat->__first_page, cat->__init_pages_size * PAGE_SIZE, prot);
 
             if (op == PAGE_STATUS_VALIDATE) {
-                __static_data_flags |= cat_index;
+                valid |= cat_index;
             } else if (op == PAGE_STATUS_INVALIDATE) {
-                __static_data_flags &= ~cat_index;
+                valid &= ~cat_index;
             }
         }
 
@@ -140,23 +99,50 @@ void __static_pages_status(uint16_t data, char op)
 }
 
 /**
+ * Validates the speicifed static categories.
+ * Invocation of this function should only occur after the data for the specific static category
+ * is understood to be final.
+ *
+ * @param data  The static categories to validate.
+ */
+static void __static_pages_validate(uint16_t data)
+{
+
+    __static_pages_status(data, PAGE_STATUS_VALIDATE);
+}
+
+
+/**
+ * Frees all memory tied up for tracking and maintaining anonymous pages for the static api.
+ * Should only be invoked on exit (i.e. cchamp_close()).
+ */
+static void __static_pages_free()
+{
+    struct category* cat = categories;
+
+    for (int i = 0; i < STATIC_CATEGORY_SIZE; cat++, i++) {
+        if (cat->__first_page != NULL && cat->__first_page != MAP_FAILED) {
+
+            // free the anonymous pages backed for this category.
+            munmap(cat->__first_page, cat->__init_pages_size * PAGE_SIZE);
+        }
+    }
+
+    // all pages backed by the categories have now been freed. It is possible to free the headers
+    // that track these pages.
+    free(categories);
+}
+
+/**
  * Memory maps a sufficient amount of anonymous pages for static categories.
  * The number of anonymous backing pages per static category is determined by __categories_pages config
  * array in this file.
  *
- * Manipulating PAGES_* constants will alter the number of pages mmaped for categories.
- *
  * @return A non-zero, positive number of how many bytes were allocated.
  *         0    Failure in mmaping anonymous pages.
  */
-int __static_pages_allocate()
+static int __static_pages_allocate()
 {
-    if (categories != NULL) {
-
-        // If categories is not null, then this function must have been previously invoked.
-        // Simply terminating with no effect is sufficient.
-        return 0;
-    }
 
     // Allocate, on the heap, the necessary headers for keeping track of the anonymous pages.
     categories = (struct category *)malloc(sizeof(struct category) * STATIC_CATEGORY_SIZE);
@@ -182,24 +168,56 @@ int __static_pages_allocate()
     return pages_alloc * PAGE_SIZE;
 }
 
+/**
+ * Invalidates the loaded data for the specific static categories.
+ * All operations on the invalidated static categories will result in a server update before proceeding.
+ *
+ * @param data The static categories to invalidate.
+ */
+void cchamp_static_invalidate(uint16_t data)
+{
+
+    /*
+     * The corresponding anonymous pages are not affected by this invocation.
+     * Anonymous pages are kept in memory throughout the whole life cycle of cchamp.
+     */
+
+    __static_pages_status(data, PAGE_STATUS_INVALIDATE);
+}
 
 /**
- * Frees all memory tied up for tracking and maintaining anonymous pages for the static api.
- * Should only be invoked on exit (i.e. cchamp_close()).
+ * Loads the specified static data into memory.
  */
-void __static_pages_free()
+void cchamp_static_load(uint16_t data)
 {
-    struct category* cat = categories;
+    // Invalidate all pages that are about to be updated to prevent access until the load is complete.
+    cchamp_static_invalidate(data);
+}
 
-    for (int i = 0; i < STATIC_CATEGORY_SIZE; cat++, i++) {
-        if (cat->__first_page != NULL && cat->__first_page != MAP_FAILED) {
+/**
+ * Acquires memory for the storage of static data.
+ *
+ * @return  The size (in bytes) of memory allocated; or <br>
+ *          0 if categories has already been allocated.
+ */
+int static_pages_allocate()
+{
+    if (categories != NULL) {
 
-            // free the anonymous pages backed for this category.
-            munmap(cat->__first_page, cat->__init_pages_size * PAGE_SIZE);
-        }
+        // If categories is not null, then this function must have been previously invoked.
+        // Simply terminating with no effect is sufficient.
+        return 0;
     }
 
-    // all pages backed by the categories have now been freed. It is possible to free the headers
-    // that track these pages.
-    free(categories);
+    return __static_pages_allocate();
+}
+
+/**
+ * Frees up the allocated pages for the static data storage.
+ */
+void static_pages_free()
+{
+    if (categories != NULL) {
+        __static_pages_free();
+    }
 }

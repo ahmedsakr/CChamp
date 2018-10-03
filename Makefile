@@ -16,7 +16,8 @@ dynamic: compile-proper
 
 headers-install: ${HEADERS_DIR}/*.h
 	sudo rm -rf ${HEADERS_INSTALL_DIR}/cchamp
-	sudo cp -r $< ${HEADERS_INSTALL_DIR}
+	sudo mkdir ${HEADERS_INSTALL_DIR}/cchamp
+	sudo cp -r $< ${HEADERS_INSTALL_DIR}/cchamp
 
 dynamic-install: dynamic
 	sudo mv -f ${LIB_NAME} ${DYNAMIC_INSTALL_DIR}

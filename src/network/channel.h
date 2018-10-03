@@ -110,6 +110,18 @@ Argument* query_arg(Request* request, char* key, char* value, Argument* next);
 
 
 /*
+ * Allocates a buffer for channel data storage.
+ */
+int     channel_blocks_allocate();
+
+
+/*
+ * Frees the buffer allocated for channel data storage.
+ */
+void    channel_blocks_free();
+
+
+/*
  * Produces a fuly-qualified url by extracting data from the provided request.
  */
 char*   channel_url(Request* request);
@@ -132,20 +144,4 @@ size_t  channel_response_received(char* ptr, size_t size, size_t nmemb, void* re
  * Cleans up all resources used by the request.
  */
 void    channel_clean(Request* request);
-
-
-/*
- * Internal functions that are exposed by this interface due to the necessity for external invocation.
- */
-
-/*
- * Map necessary anonymous pages for query response storage.
- */
-int     __channel_blocks_allocate();
-
-
-/*
- * Return the mapped anonymous pages to the operating system.
- */
-void    __channel_blocks_free();
 #endif

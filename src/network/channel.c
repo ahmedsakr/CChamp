@@ -40,13 +40,134 @@ static __CBUFF buffer;
 static char url[512];
 struct curl_slist *http_headers;
 
-extern void webstr(char* dest, char* str);
-int __channel_blocks_allocate();
-void __channel_blocks_free();
-void* __channel_blocks_claim();
-void __channel_blocks_relinquish(Request* request);
-void __channel_arguments_free(Argument* request, int* size);
 
+/**
+ * Anonymously maps necessary pages for having sufficient memory backing for query responses
+ * for up to CHANNEL_BLOCK_NUM (8) concurrent queries.
+ *
+ * @return      On success, a non-zero, postive number that represents the number of bytes allocated.
+ *              0   If the mmap has failed.
+ */
+static int __channel_blocks_allocate()
+{
+    buffer.status = 0;
+    buffer.addr = mmap(NULL, CHANNEL_BLOCK_NUM * CHANNEL_BLOCK_SIZE, PROT_READ | PROT_WRITE, MAP_ANONYMOUS | MAP_PRIVATE, -1, 0);
+    if (buffer.addr == MAP_FAILED) {
+        return 0;
+    }
+
+    return CHANNEL_BLOCK_NUM * CHANNEL_BLOCK_SIZE;
+}
+
+
+/**
+ * Frees all anonymously mapped pages held by the channel.
+ */
+static void __channel_blocks_free()
+{
+    if (buffer.addr != MAP_FAILED || buffer.addr != NULL) {
+        munmap(buffer.addr, CHANNEL_BLOCK_NUM * CHANNEL_BLOCK_SIZE);
+    }
+}
+
+
+/**
+ * Atmemts to claim a block in the buffer.
+ *
+ * @return      NULL    If it was unsucessful in acquiring a block (i.e. all blocks are in-use).
+ *              Pointer If it was successful. The starting address for the block is returned.
+ */
+static void * __channel_blocks_claim()
+{
+    uint8_t free_buffer = 0x01;
+
+    // Keep looping until the first cleared bit is detected.
+    while ((buffer.status & free_buffer) != 0)
+    {
+        free_buffer <<= 1;
+    }
+
+    // if free_buffer is 0, then it must have overflowed which only happens when no buffers are available.
+    if (free_buffer == 0) {
+        return NULL;
+    }
+
+    // Claim the block in the buffer by setting its corresponding bit in the buffer status.
+    buffer.status |= free_buffer;
+    return buffer.addr + (CHANNEL_BLOCK_SIZE * get_bit_index(free_buffer));
+}
+
+
+/*
+ * Clears the specified bit from the buffer status, effectively setting it to free.
+ * Data in the block pages do not have to be flushed, only invalidated.
+ *
+ * @param block The identifier for the block in the buffer.
+ */
+static void __channel_blocks_relinquish(Request* request)
+{
+    /*
+     * Using the request's response address, the block index in the buffer must be reverse engineered.
+     * It is quite simple to do so because all blocks have fixed sizes.
+     */
+    size_t offset = (uintptr_t)request->response.addr - (uintptr_t)buffer.addr;
+    size_t block_index = offset / CHANNEL_BLOCK_SIZE;
+
+    // Flush the response struct in the request in preparation for a relinquish of the block.
+    request->response.size = 0;
+    request->response.addr = NULL;
+
+    // Clear the corresponding block index.
+    buffer.status &= ~(1 << block_index);
+}
+
+
+
+/**
+ * Free up a linked-list structured argument list.
+ *
+ * @param head The head node of the argument linked list.
+ * @param size The tracked size of the arguments.
+ */
+static void __channel_arguments_free(Argument *head, int* size)
+{
+    Argument* temp;
+    while (head != NULL) {
+        temp = head;
+        head = head->next;
+        free((void *)temp);
+    }
+
+    // All arguments have been freed; reset the arguments size counter to 0.
+    *size = 0;
+}
+
+/**
+ * Sanitized function for __channel_blocks_allocate().
+ * Only permits allocation if the buffer.addr is NULL.
+ *
+ * @return      The size (in bytes) of the allocated buffer; or <br>
+ *              0 if the buffer has already been allocated.
+ */
+int channel_blocks_allocate()
+{
+    if (buffer.addr == NULL) {
+        return __channel_blocks_allocate();
+    }
+
+    return 0;
+}
+
+/**
+ * Sanitized function for __channel_blocks_free().
+ * Only permits freeing if the buffer.addr is not NULL.
+ */
+void channel_blocks_free()
+{
+    if (buffer.addr != NULL) {
+        return __channel_blocks_free();
+    }
+}
 
 /**
  * Creates a path argument on the heap.
@@ -197,106 +318,4 @@ void channel_clean(Request* request)
     // Free up the heap arguments.
     __channel_arguments_free(request->arguments.path.head, &request->arguments.path.size);
     __channel_arguments_free(request->arguments.query.head, &request->arguments.query.size);
-}
-
-
-/**
- * Anonymously maps necessary pages for having sufficient memory backing for query responses
- * for up to CHANNEL_BLOCK_NUM (8) concurrent queries.
- *
- * @return      On success, a non-zero, postive number that represents the number of bytes allocated.
- *              0   If the mmap has failed.
- */
-int __channel_blocks_allocate()
-{
-    buffer.status = 0;
-    buffer.addr = mmap(NULL, CHANNEL_BLOCK_NUM * CHANNEL_BLOCK_SIZE, PROT_READ | PROT_WRITE, MAP_ANONYMOUS | MAP_PRIVATE, -1, 0);
-    if (buffer.addr == MAP_FAILED) {
-        return 0;
-    }
-
-    return CHANNEL_BLOCK_NUM * CHANNEL_BLOCK_SIZE;
-}
-
-
-/**
- * Frees all anonymously mapped pages held by the channel.
- */
-void __channel_blocks_free()
-{
-    if (buffer.addr != MAP_FAILED || buffer.addr != NULL) {
-        munmap(buffer.addr, CHANNEL_BLOCK_NUM * CHANNEL_BLOCK_SIZE);
-    }
-}
-
-
-/**
- * Atmemts to claim a block in the buffer.
- *
- * @return      NULL    If it was unsucessful in acquiring a block (i.e. all blocks are in-use).
- *              Pointer If it was successful. The starting address for the block is returned.
- */
-void * __channel_blocks_claim()
-{
-    uint8_t free_buffer = 0x01;
-
-    // Keep looping until the first cleared bit is detected.
-    while ((buffer.status & free_buffer) != 0)
-    {
-        free_buffer <<= 1;
-    }
-
-    // if free_buffer is 0, then it must have overflowed which only happens when no buffers are available.
-    if (free_buffer == 0) {
-        return NULL;
-    }
-
-    // Claim the block in the buffer by setting its corresponding bit in the buffer status.
-    buffer.status |= free_buffer;
-    return buffer.addr + (CHANNEL_BLOCK_SIZE * get_bit_index(free_buffer));
-}
-
-
-/*
- * Clears the specified bit from the buffer status, effectively setting it to free.
- * Data in the block pages do not have to be flushed, only invalidated.
- *
- * @param block The identifier for the block in the buffer.
- */
-void __channel_blocks_relinquish(Request* request)
-{
-    /*
-     * Using the request's response address, the block index in the buffer must be reverse engineered.
-     * It is quite simple to do so because all blocks have fixed sizes.
-     */
-    size_t offset = (uintptr_t)request->response.addr - (uintptr_t)buffer.addr;
-    size_t block_index = offset / CHANNEL_BLOCK_SIZE;
-
-    // Flush the response struct in the request in preparation for a relinquish of the block.
-    request->response.size = 0;
-    request->response.addr = NULL;
-
-    // Clear the corresponding block index.
-    buffer.status &= ~(1 << block_index);
-}
-
-
-
-/**
- * Free up a linked-list structured argument list.
- *
- * @param head The head node of the argument linked list.
- * @param size The tracked size of the arguments.
- */
-void __channel_arguments_free(Argument *head, int* size)
-{
-    Argument* temp;
-    while (head != NULL) {
-        temp = head;
-        head = head->next;
-        free((void *)temp);
-    }
-
-    // All arguments have been freed; reset the arguments size counter to 0.
-    *size = 0;
 }

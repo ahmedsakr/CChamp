@@ -40,7 +40,7 @@ RiotAPI api = {
 int cchamp_init()
 {
     // map all necessary pages for backing cchamp internal data.
-    int reserved = __static_pages_allocate() + __channel_blocks_allocate();
+    int reserved = static_pages_allocate() + channel_blocks_allocate();
 
     // Attempt to initialize the curl instance which will be used as the http medium.
     channel = curl_easy_init();
@@ -70,8 +70,8 @@ void cchamp_close()
     }
 
     // return all anonymously backed pages to the OS.
-    __static_pages_free();
-    __channel_blocks_free();
+    static_pages_free();
+    channel_blocks_free();
 }
 
 
