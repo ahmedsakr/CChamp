@@ -44,7 +44,7 @@ char get_bit_index(uint16_t val)
  *
  * @param unsafe A potentially web unsafe string.
  */
-void webstr(char *dest, char *unsafe)
+void webstr(char* dest, char* unsafe)
 {
     int len = strlen(unsafe);
 

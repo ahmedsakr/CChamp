@@ -58,7 +58,7 @@ struct api_request {
 
     struct {
         int size;
-        void *addr;
+        void* addr;
     } response;
 
     long http_code;
@@ -100,13 +100,13 @@ extern char* regions[];
 /*
  * Creates a new path argument.
  */
-Argument*  path_arg(Request *request, char* value, Argument* next);
+Argument*  path_arg(Request* request, char* value, Argument* next);
 
 
 /*
  * Creates a new query argument.
  */
-Argument* query_arg(Request *request, char* key, char* value, Argument* next);
+Argument* query_arg(Request* request, char* key, char* value, Argument* next);
 
 
 /*

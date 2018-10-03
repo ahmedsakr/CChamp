@@ -61,6 +61,8 @@ extern struct category* categories;
  */
 extern uint16_t __static_data_flags;
 
+void cchamp_static_load(uint16_t data);
+void cchamp_static_invalidate(uint16_t data);
 
 /*
  * Changes the status for the specified static categories.

@@ -26,11 +26,11 @@
 /*
  * API path arguments for different combinations of regions and APIs.
  */
-char *regions[] = {
+char* regions[] = {
     "na1", "eun1", "euw1", "ru", "tr1",
     "kr", "br1", "oc1", "jp1", "la1", "la2"
 };
-char *api_path[] = {
+char* api_path[] = {
     "champion-mastery", "platform", "league", "static-data",
     "status", "match", "spectator", "summoner", "platform"
 };
@@ -40,12 +40,12 @@ static __CBUFF buffer;
 static char url[512];
 struct curl_slist *http_headers;
 
-extern void webstr(char *dest, char *str);
+extern void webstr(char* dest, char* str);
 int __channel_blocks_allocate();
 void __channel_blocks_free();
-void * __channel_blocks_claim();
+void* __channel_blocks_claim();
 void __channel_blocks_relinquish(Request* request);
-void __channel_arguments_free(Argument* request, int *size);
+void __channel_arguments_free(Argument* request, int* size);
 
 
 /**
@@ -56,7 +56,7 @@ void __channel_arguments_free(Argument* request, int *size);
  *
  * @return A pointer to the newly created argument.
  */
-Argument* path_arg(Request *request, char* value, Argument* next)
+Argument* path_arg(Request* request, char* value, Argument* next)
 {
     Argument* arg = calloc(1, sizeof(Argument));
     arg->next = next;
@@ -74,7 +74,7 @@ Argument* path_arg(Request *request, char* value, Argument* next)
  * @param value The value of the argument.
  * @param next  The next Argument to link up with.
  */
-Argument* query_arg(Request *request, char* key, char* value, Argument* next)
+Argument* query_arg(Request* request, char* key, char* value, Argument* next)
 {
     Argument* arg = calloc(1, sizeof(Argument));
     arg->next = next;
@@ -92,7 +92,7 @@ Argument* query_arg(Request *request, char* key, char* value, Argument* next)
  *
  * @param key The API key used to authenticate the query.
  */
-void channel_update_token(char *key)
+void channel_update_token(char* key)
 {
     if (http_headers != NULL) {
         curl_slist_free_all(http_headers);
@@ -154,10 +154,10 @@ char* channel_url(Request* request)
  *
  * @return the total number of bytes received.
  */
-size_t channel_response_received(char *ptr, size_t size, size_t nmemb, void *argument)
+size_t channel_response_received(char* ptr, size_t size, size_t nmemb, void* argument)
 {
     // This is guaranteed by the curl_easy_setopt call in cchamp_init().
-    Request *request = (Request *)argument;
+    Request* request = (Request *)argument;
 
     /*
      * If the request does not have a block in the buffer reserved to it yet, then
@@ -288,7 +288,7 @@ void __channel_blocks_relinquish(Request* request)
  * @param head The head node of the argument linked list.
  * @param size The tracked size of the arguments.
  */
-void __channel_arguments_free(Argument *head, int *size)
+void __channel_arguments_free(Argument *head, int* size)
 {
     Argument* temp;
     while (head != NULL) {

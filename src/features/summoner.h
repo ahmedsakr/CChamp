@@ -17,5 +17,5 @@
 #define CCHAMP_SUMMONER_H
 #include <cchamp/cchamp.h>
 
-Summoner* summoner_create(char *summoner_name, char *region, uint32_t account_id, uint32_t summoner_id);
+Summoner* summoner_create(char* summoner_name, char* region, uint32_t account_id, uint32_t summoner_id);
 #endif

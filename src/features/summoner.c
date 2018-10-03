@@ -21,7 +21,7 @@
 #include <cchamp_utils.h>
 
 static Request request;
-static Summoner *_parse_summoner(uint16_t region, char *response);
+static Summoner* _parse_summoner(uint16_t region, char* response);
 
 
 /**
@@ -29,13 +29,15 @@ static Summoner *_parse_summoner(uint16_t region, char *response);
  *
  * @param region        The region which the targeted summoner lies in.
  * @param keyword       The query keyword (i.e. summoner id, account id, or summoner name).
- * @param keyword_type  Specifies to the api which path to take based on keyword type.
+ * @param qualifier     Specifies to the api which path to take based on keyword type.
  */
-static char *summoner_request(uint16_t region, char* keyword, char* keyword_type)
+static char* summoner_request(uint16_t region, char* value, char* qualifier)
 {
+    // Flush the request in preparation for new values.
+    memset(&request, 0x00, sizeof(Request));
+
     request.api = API_SUMMONER;
-    request.arguments.path.head = path_arg(&request, keyword, NULL);
-    request.arguments.path.head = path_arg(&request, keyword_type, request.arguments.path.head);
+    request.arguments.path.head = path_arg(&request, qualifier, path_arg(&request, value, NULL));
     request.region = region;
 
     cchamp_send_request(&request);
@@ -49,9 +51,9 @@ static char *summoner_request(uint16_t region, char* keyword, char* keyword_type
  * @param summoner_name The name of the player.
  * @param region        The region which the player's account is in.
  */
-Summoner* summoner_create(char *summoner_name, char *region, uint32_t account_id, uint32_t summoner_id)
+Summoner* summoner_create(char* summoner_name, char* region, uint32_t account_id, uint32_t summoner_id)
 {
-    Summoner *summoner= calloc(1, sizeof(Summoner));
+    Summoner* summoner= calloc(1, sizeof(Summoner));
     summoner->account_id = account_id;
     summoner->summoner_id = summoner_id;
     memcpy(summoner->name, summoner_name, strlen(summoner_name));
@@ -68,7 +70,7 @@ Summoner* summoner_create(char *summoner_name, char *region, uint32_t account_id
  */
 Summoner* get_summoner_by_sid(uint16_t region, char* summoner_id)
 {
-    char *response = summoner_request(region, summoner_id, "/summoners/");
+    char* response = summoner_request(region, summoner_id, "/summoners/");
     return response == NULL ? NULL : _parse_summoner(region, response);
 }
 
@@ -81,7 +83,7 @@ Summoner* get_summoner_by_sid(uint16_t region, char* summoner_id)
  */
 Summoner* get_summoner_by_aid(uint16_t region, char* account_id)
 {
-    char *response = summoner_request(region, account_id, "/summoners/by-account/");
+    char* response = summoner_request(region, account_id, "/summoners/by-account/");
     return response == NULL ? NULL : _parse_summoner(region, response);
 }
 
@@ -93,7 +95,7 @@ Summoner* get_summoner_by_aid(uint16_t region, char* account_id)
  */
 Summoner* get_summoner_by_name(uint16_t region, char* summoner_name)
 {
-    char *response = summoner_request(region, summoner_name, "/summoners/by-name/");
+    char* response = summoner_request(region, summoner_name, "/summoners/by-name/");
     return response == NULL ? NULL : _parse_summoner(region, response);
 }
 
@@ -105,17 +107,17 @@ Summoner* get_summoner_by_name(uint16_t region, char* summoner_name)
  * @param region    The region in which the player was found.
  * @param response  The response from the API servers in JSON format.
  */
-static Summoner *_parse_summoner(uint16_t region, char *response)
+static Summoner* _parse_summoner(uint16_t region, char* response)
 {
-    cJSON *data = cJSON_Parse(response);
-    char *name = cJSON_GetObjectItemCaseSensitive(data, "name")->valuestring;
+    cJSON* data = cJSON_Parse(response);
+    char* name = cJSON_GetObjectItemCaseSensitive(data, "name")->valuestring;
     uint32_t summoner_id = cJSON_GetObjectItemCaseSensitive(data, "id")->valueint;
     uint32_t account_id = cJSON_GetObjectItemCaseSensitive(data, "accountId")->valueint;
     int level = cJSON_GetObjectItemCaseSensitive(data, "summonerLevel")->valueint;
     int icon_id = cJSON_GetObjectItemCaseSensitive(data, "profileIconId")->valueint;
-    char *region_str = regions[get_bit_index(region)];
+    char* region_str = regions[get_bit_index(region)];
 
-    Summoner *summoner = summoner_create(name, region_str, account_id, summoner_id);
+    Summoner* summoner = summoner_create(name, region_str, account_id, summoner_id);
     summoner->level = level;
     summoner->profile_icon_id = icon_id;
 

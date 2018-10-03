@@ -6,7 +6,7 @@ HEADERS_INSTALL_DIR= /usr/local/include
 DYNAMIC_INSTALL_DIR= /usr/local/lib
 SOFT_LINK_DIR=		 /usr/lib/x86_64-linux-gnu
 
-all: compile-proper dynamic-install headers-install clean
+all: dynamic-install headers-install clean
 
 compile-proper:
 	gcc -Isrc -Iinclude -Llib -fpic -c `find src -name "*.c"` -lcurl
@@ -16,7 +16,7 @@ dynamic: compile-proper
 
 headers-install: ${HEADERS_DIR}/*.h
 	sudo rm -rf ${HEADERS_INSTALL_DIR}/cchamp
-	sudo cp -r ${HEADERS_DIR} ${HEADERS_INSTALL_DIR}
+	sudo cp -r $< ${HEADERS_INSTALL_DIR}
 
 dynamic-install: dynamic
 	sudo mv -f ${LIB_NAME} ${DYNAMIC_INSTALL_DIR}

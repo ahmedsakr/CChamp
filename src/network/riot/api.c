@@ -20,9 +20,9 @@
 #include "api.h"
 #include "ddragon/static.h"
 
-static CURL *channel;
+static CURL* channel;
 uint16_t cc_error;
-extern struct curl_slist *http_headers;
+extern struct curl_slist* http_headers;
 
 RiotAPI api = {
     .rate.per_second        = MAX_REQUESTS_PER_SECOND,
@@ -81,7 +81,7 @@ void cchamp_close()
  *
  * @param key A sequence of characters used to identify the person making the API call.
  */
-void cchamp_set_api_key(char *key)
+void cchamp_set_api_key(char* key)
 {
     if (strlen(key) != API_KEY_LENGTH) return;
 
