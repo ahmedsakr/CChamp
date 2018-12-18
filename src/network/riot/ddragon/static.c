@@ -147,13 +147,13 @@ static int __static_pages_allocate()
     // Allocate, on the heap, the necessary headers for keeping track of the anonymous pages.
     categories = (struct category *)malloc(sizeof(struct category) * STATIC_CATEGORY_SIZE);
     struct category* cat = categories;
-    int protflags = PROT_READ | PROT_WRITE;
-    int pageflags = MAP_ANONYMOUS | MAP_PRIVATE;
     int pages_alloc = 0;
 
     for (int i = 0; i < STATIC_CATEGORY_SIZE; cat++, i++) {
         cat->__init_pages_size = __categories_pages[i];
-        cat->__first_page = mmap(NULL, cat->__init_pages_size * PAGE_SIZE, protflags, pageflags, -1, 0);
+        cat->__first_page = mmap(NULL,
+                                 cat->__init_pages_size * PAGE_SIZE,
+                                 PROT_READ | PROT_WRITE, MAP_ANONYMOUS | MAP_PRIVATE, -1, 0);
 
         // if the anonymous page mapping failed, then an error indicating value is returned.
         // errno should be read instead of cc_error in this case as mmap() sets errno on failure.
