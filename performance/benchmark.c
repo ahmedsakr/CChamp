@@ -7,6 +7,7 @@ clock_t delta;
 
 int main(void)
 {
+    clock_t absolute_beginning = clock();
     begin = clock();
     cchamp_init();
     delta = clock() - begin;
@@ -52,5 +53,7 @@ int main(void)
     delta = clock() - begin;
     printf("cchamp_close() took %f ms.\n", ((float)delta * 1000/ CLOCKS_PER_SEC));
 
+    clock_t absolute_end = clock();
+    printf("Total time taken: %f ms.\n", ((float)absolute_end - absolute_beginning) * ((float)(1000) / CLOCKS_PER_SEC));
     return 0;
 }
