@@ -21,8 +21,34 @@
 #include <cchamp_utils.h>
 
 static Request request;
-static Summoner* _parse_summoner(uint16_t region, char* response);
 
+/**
+ * Parses the acquired JSON response from the server so that a summoner struct may be
+ * created and returned.
+ *
+ * @param region    The region in which the player was found.
+ * @param response  The response from the API servers in JSON format.
+ */
+static Summoner* __parse_summoner(uint16_t region, char* response)
+{
+    cJSON* data = cJSON_Parse(response);
+    char* name = cJSON_GetObjectItemCaseSensitive(data, "name")->valuestring;
+    uint32_t summoner_id = cJSON_GetObjectItemCaseSensitive(data, "id")->valueint;
+    uint32_t account_id = cJSON_GetObjectItemCaseSensitive(data, "accountId")->valueint;
+    int level = cJSON_GetObjectItemCaseSensitive(data, "summonerLevel")->valueint;
+    int icon_id = cJSON_GetObjectItemCaseSensitive(data, "profileIconId")->valueint;
+    char* region_str = regions[get_bit_index(region)];
+
+    Summoner* summoner = summoner_create(name, region_str, account_id, summoner_id);
+    summoner->level = level;
+    summoner->profile_icon_id = icon_id;
+
+    // clean up all memory used for this request now that it has been completed.
+    channel_clean(&request);
+    cJSON_Delete(data);
+
+    return summoner;
+}
 
 /**
  * Dispatches a summoner information retrieval request.
@@ -71,7 +97,7 @@ Summoner* summoner_create(char* summoner_name, char* region, uint32_t account_id
 Summoner* get_summoner_by_sid(uint16_t region, char* summoner_id)
 {
     char* response = summoner_request(region, summoner_id, "/summoners/");
-    return response == NULL ? NULL : _parse_summoner(region, response);
+    return response == NULL ? NULL : __parse_summoner(region, response);
 }
 
 
@@ -84,7 +110,7 @@ Summoner* get_summoner_by_sid(uint16_t region, char* summoner_id)
 Summoner* get_summoner_by_aid(uint16_t region, char* account_id)
 {
     char* response = summoner_request(region, account_id, "/summoners/by-account/");
-    return response == NULL ? NULL : _parse_summoner(region, response);
+    return response == NULL ? NULL : __parse_summoner(region, response);
 }
 
 /**
@@ -96,34 +122,5 @@ Summoner* get_summoner_by_aid(uint16_t region, char* account_id)
 Summoner* get_summoner_by_name(uint16_t region, char* summoner_name)
 {
     char* response = summoner_request(region, summoner_name, "/summoners/by-name/");
-    return response == NULL ? NULL : _parse_summoner(region, response);
-}
-
-
-/**
- * Parses the acquired JSON response from the server so that a summoner struct may be
- * created and returned.
- *
- * @param region    The region in which the player was found.
- * @param response  The response from the API servers in JSON format.
- */
-static Summoner* _parse_summoner(uint16_t region, char* response)
-{
-    cJSON* data = cJSON_Parse(response);
-    char* name = cJSON_GetObjectItemCaseSensitive(data, "name")->valuestring;
-    uint32_t summoner_id = cJSON_GetObjectItemCaseSensitive(data, "id")->valueint;
-    uint32_t account_id = cJSON_GetObjectItemCaseSensitive(data, "accountId")->valueint;
-    int level = cJSON_GetObjectItemCaseSensitive(data, "summonerLevel")->valueint;
-    int icon_id = cJSON_GetObjectItemCaseSensitive(data, "profileIconId")->valueint;
-    char* region_str = regions[get_bit_index(region)];
-
-    Summoner* summoner = summoner_create(name, region_str, account_id, summoner_id);
-    summoner->level = level;
-    summoner->profile_icon_id = icon_id;
-
-    // clean up all memory used for this request now that it has been completed.
-    channel_clean(&request);
-    cJSON_Delete(data);
-
-    return summoner;
+    return response == NULL ? NULL : __parse_summoner(region, response);
 }

@@ -113,6 +113,10 @@ extern uint16_t cc_error;
  */
 void cchamp_config_set(uint16_t config, char value);
 
+/*
+ * Retrieve the current value of a cchamp configuration.
+ */
+char cchamp_config_get(uint16_t config);
 
 /*
  * Summoner struct defining all the relevant information on a player.
